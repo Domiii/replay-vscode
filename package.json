@@ -40,6 +40,8 @@
     ]
   },
   "scripts": {
+    "publish-devtools": "yarn install && cd $REPLAY_DIR/devtools && cd packages/design && npx yalc publish --private && cd ../../packages/node-protocol && npx yalc publish --private && cd ../../packages/shared && npx yalc publish --private && cd ../../packages/protocol && npx yalc publish --private && cd ../../packages/replay-next && npx yalc publish --private && cd ../.. && npx yalc publish",
+    "link": "npx yalc link design && npx yalc link node-protocol && npx yalc link shared && npx yalc link protocol && npx yalc link replay-next",
     "vscode:prepublish": "yarn run package",
     "compile": "webpack",
     "watch": "webpack --watch",
@@ -67,6 +69,8 @@
   },
   "dependencies": {
     "@dbux/common": "^0.7.9",
+    "@replayio/protocol": "^0.63.0",
     "strip-color": "^0.1.0"
-  }
+  },
+  "packageManager": "yarn@4.0.1"
 }

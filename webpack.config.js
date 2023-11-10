@@ -3,6 +3,7 @@
 'use strict';
 
 const path = require('path');
+const { DefinePlugin } = require('webpack');
 
 //@ts-check
 /** @typedef {import('webpack').Configuration} WebpackConfig **/
@@ -25,24 +26,39 @@ const extensionConfig = {
   },
   resolve: {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
+    alias: {
+      // 'ws': path.resolve(__dirname, './node_modules/ws')
+      'react': path.resolve(__dirname, './scripts/EmptyObject')
+    }
   },
   module: {
     rules: [
       {
         test: /\.ts$/,
-        exclude: /node_modules/,
         use: [
           {
             loader: 'ts-loader'
           }
         ]
+      },
+      {
+        loader: "expose-loader",
+        options: {
+          exposes: ["$", "jQuery"],
+        },
       }
     ]
   },
-  devtool: 'nosources-source-map',
+  devtool: 'source-map',
   infrastructureLogging: {
     level: "log", // enables logging required for problem matchers
   },
+  plugins: [
+    new DefinePlugin({
+      // window: "global",
+      // WebSocket: "require('ws').WebSocket"
+    })
+  ]
 };
 module.exports = [ extensionConfig ];
