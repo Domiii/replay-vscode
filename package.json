@@ -3,6 +3,9 @@
   "displayName": "Replay in VSCode",
   "description": "Replay in VSCode",
   "version": "0.0.1",
+  "preview": true,
+  "private": true,
+  "icon": "resources/replay-logo.png",
   "engines": {
     "vscode": "^1.84.0"
   },
@@ -12,6 +15,23 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "replayViewContainer",
+          "title": "Replay",
+          "icon": "resources/replay-logo.png"
+        }
+      ]
+    },
+    "views": {
+      "replayViewContainer": [
+        {
+          "id": "replayInfoView",
+          "name": "Replay"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "replay-vscode.helloWorld",
@@ -31,18 +51,22 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.84.0",
     "@types/mocha": "^10.0.3",
     "@types/node": "18.x",
+    "@types/vscode": "^1.84.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
+    "@vscode/test-electron": "^2.3.6",
     "eslint": "^8.52.0",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
-    "typescript": "^5.2.2",
     "ts-loader": "^9.5.0",
+    "typescript": "^5.2.2",
     "webpack": "^5.89.0",
-    "webpack-cli": "^5.1.4",
-    "@vscode/test-electron": "^2.3.6"
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "@dbux/common": "^0.7.9",
+    "strip-color": "^0.1.0"
   }
 }
