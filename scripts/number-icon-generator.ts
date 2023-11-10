@@ -34,7 +34,7 @@ function makeHsl(heat: number) {
 (async function main() {
   const dir = path.join(__dirname, "../resources/dark/num");
   const min = 0;
-  const max = 1000;
+  const max = 10;
   
   const heatUnit = 1 / (max - min);
   for (let i = 1; i <= 10; ++i) {
