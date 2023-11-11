@@ -11,12 +11,13 @@ import { RecordingEntry } from "@replayio/replay/src/types";
 import { generateDefaultTitle } from "@replayio/replay/src/generateDefaultTitle";
 import { getDirectory as getRecordingsDirectory } from "@replayio/replay/src/utils";
 
-function getRecordingsFile(dir: string) {
+function getRecordingsFile() {
+  const dir = getRecordingsDirectory();
   return path.join(dir, "recordings.log");
 }
 
-function readRecordingFile(dir: string) {
-  const file = getRecordingsFile(dir);
+function readRecordingFile() {
+  const file = getRecordingsFile();
   if (!fs.existsSync(file)) {
     return [];
   }
@@ -52,11 +53,10 @@ export function getRecordingEntry(id: string) {
 }
 
 export function readRecordings(
-  dir: string = getRecordingsDirectory(),
   includeHidden = false
 ) {
   const recordings: RecordingEntry[] = [];
-  const lines = readRecordingFile(dir);
+  const lines = readRecordingFile();
   for (const line of lines) {
     let obj;
     try {

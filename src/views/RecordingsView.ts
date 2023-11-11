@@ -30,7 +30,11 @@ class RecordingsView extends BaseTreeViewNodeProvider<RecordingViewNode> {
 
   DefaultNodeClass = RecordingViewNode;
   EmptyNodeDescription = "(no recordings yet)";
-  getRootEntries = () => localRecordingsTracker.recordings.data;
+  getRootEntries = () => {
+    const entries = localRecordingsTracker.recordings.data.concat();
+    entries.sort((a, b) => b.createTime.getTime() - a.createTime.getTime());
+    return entries;
+  };
 }
 
 const StatusIcons = {
@@ -56,6 +60,12 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
     const uri = recording.metadata.uri;
     const icon = StatusIcons[recording.status] || "";
     return `${icon} ${uri}`;
+  }
+
+  static makeProperties(recording: RecordingEntry) {
+    return {
+      description: `${recording.createTime?.toLocaleDateString()} ${recording.createTime?.toLocaleTimeString()}`
+    };
   }
 
   async handleClick() {
