@@ -21,7 +21,6 @@
 		"resolveJsonModule": true,
 		"sourceMap": true,
 		"strict": true,   /* enable all strict type-checking options */
-		"allowJs": true,
 		"checkJs": false,
 		"suppressImplicitAnyIndexErrors": true,
 		"downlevelIteration": true /* Provide full support for iterables in 'for-of', spread, and destructuring when targeting 'ES5' or 'ES3'. */,
@@ -35,5 +34,8 @@
 		"src",
 		".yalc"
 		// "scripts"
+	],
+	"exclude": [
+		"third-party/mocks/replay-next/ProtocolMessagesStore.js"
 	]
 }

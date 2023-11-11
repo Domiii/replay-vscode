@@ -16,7 +16,7 @@ import NestedError from '@dbux/common/src/NestedError';
 /* @ts-ignore */
 import { throttle } from '@dbux/common/src/util/scheduling';
 import BaseTreeViewNode from './BaseTreeViewNode';
-import { registerCommand } from '../../code-util/commands';
+import { registerCommand } from '../../code-util/registerCommand';
 import { getThemeResourcePath } from '../../code-util/codePaths';
 import EmptyTreeViewNode from './EmptyNode';
 

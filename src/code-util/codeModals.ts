@@ -27,7 +27,7 @@ showInformationMessage(value, {
 }, { modal: true });
 ```
  */
-export async function showInformationMessage(message: string, btnConfig: any, messageCfg = EmptyObject, cancelCallback?: Function) {
+export async function showInformationMessage(message: string, btnConfig?: any, messageCfg = EmptyObject, cancelCallback?: Function) {
   btnConfig = btnConfig || EmptyObject;
   const buttons = Object.keys(btnConfig);
   // if (messageCfg?.modal && process.platform === 'darwin') {

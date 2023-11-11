@@ -59,7 +59,7 @@ export default class BaseTreeViewNode<
     this.parent = parent;
 
     // treeItem data
-    // this.contextValue = this.constructor.name;
+    this.contextValue = this.constructor.name;
 
     // more custom props for this node
     Object.assign(this, moreProps);

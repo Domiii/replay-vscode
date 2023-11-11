@@ -4,9 +4,7 @@ import BaseTreeViewNodeProvider from "../code-ui/treeView/BaseTreeViewNodeProvid
 import BaseTreeViewNode from "../code-ui/treeView/BaseTreeViewNode";
 import { RecordingEntry } from "@replayio/replay";
 import { localRecordingsTracker } from "../recordings/LocalRecordingsTracker";
-
-// eslint-disable-next-line no-unused-vars
-const { log, debug, warn, error: logError } = newLogger("recordingsView");
+import { openUrl } from "../util/system";
 
 /** ###########################################################################
  * {@link RecordingsView}
@@ -61,9 +59,7 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
   }
 
   async handleClick() {
-    // Note: There is a compatability problem with open, requiring a dynamic import.
-    const { openApp } = await import("open");
-    await openApp(`https://app.replay.io/recording/${this.entry.id}`);
+    await openUrl(`https://app.replay.io/recording/${this.entry.id}`);
   }
 }
 
