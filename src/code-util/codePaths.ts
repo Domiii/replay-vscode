@@ -1,6 +1,7 @@
 import fs, { EncodingOption } from 'fs';
 import path from 'path';
-import { ColorThemeKind, ExtensionContext, window } from 'vscode';
+import { ColorThemeKind, window } from 'vscode';
+import currentContext from './currentContext';
 
 export function realPathSyncNormalized(fpath: string, options?: EncodingOption) {
   return pathNormalized(fs.realpathSync(fpath, options));
@@ -53,13 +54,6 @@ export function pathNormalized(fpath: string) {
   return fpath.replace(/\\/g, '/');
 }
 
-
-let extensionContext: ExtensionContext;
-
-export function initCodePaths(_context: ExtensionContext) {
-  extensionContext = _context;
-}
-
 /**
  * In addition to standard normalization, also enforces upper-case drive letter.
  */
@@ -72,10 +66,7 @@ export function getThemeKindName(kind: ColorThemeKind) {
 }
 
 export function asAbsolutePath(fpath: string) {
-  if (!extensionContext) {
-    throw new Error("Cannot call asAbsolutePath yet. Make sure to call initCodePaths first.");
-  }
-  return pathNormalizedForce(extensionContext.asAbsolutePath(fpath));
+  return pathNormalizedForce(currentContext().asAbsolutePath(fpath));
 }
 
 export function getResourcePath(...relativePathSegments: string[]) {

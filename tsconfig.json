@@ -10,6 +10,7 @@
 		"paths": {
 			"@sentry/react": ["third-party/mocks/@sentry/react/index.js"],
 			"replay-next/components/protocol/ProtocolMessagesStore": ["third-party/mocks/replay-next/ProtocolMessagesStore.js"],
+			"shared/*": [".yalc/shared/*"]
 			// "replay-next": ["third-party/mocks/replay-next/*"]
 		},
 		"esModuleInterop": true, /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. */
@@ -34,10 +35,5 @@
 		"src",
 		".yalc"
 		// "scripts"
-	],
-	"exclude": [
-		"node_modules",
-		"dist",
-		"webpack.config.js"
 	]
 }
