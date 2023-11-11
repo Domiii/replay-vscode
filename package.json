@@ -41,7 +41,8 @@
   },
   "scripts": {
     "publish-devtools": "yarn install && cd $REPLAY_DIR/devtools && cd packages/design && npx yalc publish --private && cd ../../packages/node-protocol && npx yalc publish --private && cd ../../packages/shared && npx yalc publish --private && cd ../../packages/protocol && npx yalc publish --private && cd ../../packages/replay-next && npx yalc publish --private && cd ../.. && npx yalc publish",
-    "link": "npx yalc link design && npx yalc link node-protocol && npx yalc link shared && npx yalc link protocol && npx yalc link replay-next",
+    "linkitzz": "npx yalc link design && npx yalc link node-protocol && npx yalc link shared && npx yalc link protocol && npx yalc link replay-next",
+    "linkit": "npx yalc link shared && npx yalc link protocol",
     "vscode:prepublish": "yarn run package",
     "compile": "webpack",
     "watch": "webpack --watch",
@@ -56,6 +57,7 @@
     "@types/mocha": "^10.0.3",
     "@types/node": "18.x",
     "@types/vscode": "^1.84.0",
+    "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "@vscode/test-electron": "^2.3.6",
@@ -63,14 +65,18 @@
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
     "ts-loader": "^9.5.0",
+    "tsconfig-paths-webpack-plugin": "^4.1.0",
     "typescript": "^5.2.2",
     "webpack": "^5.89.0",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "bufferutil": "^4.0.8",
+    "utf-8-validate": "^6.0.3"
   },
   "dependencies": {
     "@dbux/common": "^0.7.9",
     "@replayio/protocol": "^0.63.0",
-    "strip-color": "^0.1.0"
+    "strip-color": "^0.1.0",
+    "ws": "^8.14.2"
   },
   "packageManager": "yarn@4.0.1"
 }

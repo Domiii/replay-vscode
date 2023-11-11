@@ -4,3 +4,13 @@ node_modules
 .vscode-test/
 *.vsix
 .yalc
+
+# Yarn
+# see https://github.com/yarnpkg/berry/issues/454#issuecomment-1411548086
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

@@ -1,0 +1,11 @@
+{
+  "version": "v1",
+  "packages": {
+    "shared": {
+      "signature": "25cbd84697f6a229808c371e26a26de1"
+    },
+    "protocol": {
+      "signature": "d5b7b84459698bae3d368257eeb79347"
+    }
+  }
+}

@@ -15,5 +15,5 @@ This is a nice little prototype to demonstrate the theoretical potential of havi
   cd ./replay-vscode # (this ended up not working)
   yarn install
   # yarn publish-devtools # publish devtools to yalc
-  # yarn link # establish linkage with locally yalc'ed devtools version
+  # yarn linkit # establish linkage with locally yalc'ed devtools version
   ```

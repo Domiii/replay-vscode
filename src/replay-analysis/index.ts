@@ -1,3 +1,6 @@
+// import { ReplayClientInterface } from "shared/client/types";
+// import { createReplayClientForProduction } from "shared/utils/client";
+
 const SampleRecordingId = "cec0e180-e974-4006-967e-332898dee2e8";
 const SamplePoint = "31128880624384868365";
 
@@ -6,7 +9,7 @@ export async function recordAndUpload(url: string) {
   return SampleRecordingId;
 }
 
-let currentClient: ReplayClientInterface;
+let currentClient: any;
 
 export function isClientReady() {
   return !!currentClient?.getSessionId();
@@ -19,6 +22,7 @@ export async function startSession(recordingId: string = SampleRecordingId) {
   }
 
   console.debug(`startSession("${recordingId}")`);
+  const { createReplayClientForProduction } = await import("shared/utils/client");
   currentClient = createReplayClientForProduction();
 
   await currentClient.initialize(recordingId, accessToken);
@@ -41,5 +45,11 @@ export async function runExperiment() {
   await startSession();
   const expr = "3 * 4";
   const result = await evalAtPoint(SamplePoint, expr);
-  console.log(`runExperiment - ${expr} = ${result}`);
+  if ("value" in result.returned) {
+    const value = result.returned.value;
+    console.log(`runExperiment - ${expr} = ${JSON.stringify(result)}`);
+  }
+  else {
+    console.error(`runExperiment failed: ${JSON.stringify(result)}`);
+  }
 }
