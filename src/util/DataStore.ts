@@ -12,9 +12,13 @@ type EventMap<V extends KeyedData<K>, K extends KeyType = V['id']> = {
 };
 
 export default class DataStore<V extends KeyedData<K>, K extends KeyType = V['id']> implements Iterable<V> {
-  private data: V[] = [];
+  private _data: V[] = [];
   private dataByKey = new Map<K, V>;
   private _events = new EventEmitter<EventMap<V, K>>();
+
+  get data(): readonly V[] {
+    return this._data;
+  }
 
   get events(): typeof this._events {
     return this._events;
@@ -29,7 +33,7 @@ export default class DataStore<V extends KeyedData<K>, K extends KeyType = V['id
   }
   
   *[Symbol.iterator](): IterableIterator<V> {
-    yield *this.data;
+    yield *this._data;
   }
 
   /** ###########################################################################
@@ -37,20 +41,20 @@ export default class DataStore<V extends KeyedData<K>, K extends KeyType = V['id
    * ##########################################################################*/
 
   private addSilent(v: V) {
-    this.data.push(v);
+    this._data.push(v);
     this.dataByKey.set(v.id, v);
   }
 
   add(v: V) {
     this.addSilent(v);
-    this._events.emit("update", this.data, [v]);
+    this._events.emit("update", this._data, [v]);
   }
 
   addAll(vs: V[]) {
     for (const v of vs) {
       this.addSilent(v);
     }
-    this._events.emit("update", this.data, vs);
+    this._events.emit("update", this._data, vs);
   }
 
   /** ###########################################################################
@@ -64,11 +68,11 @@ export default class DataStore<V extends KeyedData<K>, K extends KeyType = V['id
 
   clear() {
     this.clearSilent();
-    this._events.emit("update", this.data, EmptyArray);
+    this._events.emit("update", this._data, EmptyArray);
   }
 
   private clearSilent() {
-    this.data = [];
+    this._data = [];
     this.dataByKey = new Map();
   }
 }

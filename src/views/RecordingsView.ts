@@ -1,14 +1,12 @@
-
-import { commands } from 'vscode';
 /* @ts-ignore */
-import { newLogger } from '@dbux/common/src/log/logger';
-import BaseTreeViewNodeProvider from '../code-ui/treeView/BaseTreeViewNodeProvider';
-import BaseTreeViewNode from '../code-ui/treeView/BaseTreeViewNode';
-import { RecordingEntry } from '@replayio/replay';
-import { localRecordingsTracker } from '../recordings/LocalRecordingsTracker';
+import { newLogger } from "@dbux/common/src/log/logger";
+import BaseTreeViewNodeProvider from "../code-ui/treeView/BaseTreeViewNodeProvider";
+import BaseTreeViewNode from "../code-ui/treeView/BaseTreeViewNode";
+import { RecordingEntry } from "@replayio/replay";
+import { localRecordingsTracker } from "../recordings/LocalRecordingsTracker";
 
 // eslint-disable-next-line no-unused-vars
-const { log, debug, warn, error: logError } = newLogger('recordingsView');
+const { log, debug, warn, error: logError } = newLogger("recordingsView");
 
 /** ###########################################################################
  * {@link RecordingsView}
@@ -31,8 +29,22 @@ class RecordingsView extends BaseTreeViewNodeProvider<RecordingViewNode> {
     // Load once.
     localRecordingsTracker.loadRecordings();
   }
+
+  DefaultNodeClass = RecordingViewNode;
+  EmptyNodeDescription = "(no recordings yet)";
+  getRootEntries = () => localRecordingsTracker.recordings.data;
 }
 
+const StatusIcons = {
+  onDisk: "💾",
+  crashed: "💥💾",
+  unknown: "❓",
+  uploaded: "✅",
+  startedWrite: "⌛",
+  startedUpload: "⌛",
+  crashUploaded: "💥✔",
+  unusable: "❓",
+};
 
 /** ###########################################################################
  * {@link RecordingViewNode}
@@ -40,17 +52,18 @@ class RecordingsView extends BaseTreeViewNodeProvider<RecordingViewNode> {
 
 export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
   /**
-   * 
+   *
    */
   static makeLabel(recording: RecordingEntry) {
-    const prefix = allApplications.selection.containsApplication(app) ? '☑' : '☐';
-    // const label = app.getRelativeFolder();
-    const label = app.getPreferredName();
-    return `${prefix} ${label}`;
+    const uri = recording.metadata.uri;
+    const icon = StatusIcons[recording.status] || "";
+    return `${icon} ${uri}`;
   }
-  
-  handleClick() {
-    // TODO: open `https://app.replay.io/recording/${this.entry.id}`
+
+  async handleClick() {
+    // Note: There is a compatability problem with open, requiring a dynamic import.
+    const { openApp } = await import("open");
+    await openApp(`https://app.replay.io/recording/${this.entry.id}`);
   }
 }
 
@@ -58,11 +71,9 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
  * init
  * ##########################################################################*/
 
-
 export let recordingsView: RecordingsView;
 
-export function init() {
+export function initRecordingsView() {
   recordingsView = new RecordingsView();
   recordingsView.initOnActivate();
 }
-

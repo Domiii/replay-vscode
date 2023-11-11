@@ -5,6 +5,9 @@ import EventHandlerList from "@dbux/common/src/util/EventHandlerList";
 import { TreeItem } from "vscode";
 import BaseTreeViewNodeProvider from "./BaseTreeViewNodeProvider";
 
+/** @typedef {import('@dbux/data/src/pathways/UserActionType').default} UserActionType */
+/** @typedef {import('./BaseTreeViewNodeProvider').default} BaseTreeViewNodeProvider */
+
 export default class BaseTreeViewNode<
   E
 > extends TreeItem {
@@ -22,19 +25,16 @@ export default class BaseTreeViewNode<
 
   private _activeEventHandlers = new EventHandlerList();
 
-  static makeLabel(entry: E, parent: N | null, moreProps: any, provider: P) {
+  // NOTE: There is no proper way to have TS static function parameter types line up with the class parameters.
+  static makeLabel(entry: any, parent: any, moreProps: any, provider: any) {
     return "(unnamed node)";
   }
 
-  static makeProperties?: <
-    E,
-    N extends BaseTreeViewNode<E>,
-    P extends BaseTreeViewNodeProvider<N>
-  >(
-    entry: E,
-    parent: N | null,
+  static makeProperties?: (
+    entry: any,
+    parent: any,
     moreProps: any,
-    provider: P
+    provider: any
   ) => any = undefined;
 
   static makeChildPropsDefault<
@@ -48,9 +48,9 @@ export default class BaseTreeViewNode<
   constructor(
     treeNodeProvider: BaseTreeViewNodeProvider<BaseTreeViewNode<E>>,
     label: string,
-    entry: E,
-    parent: BaseTreeViewNode<E> | null,
-    moreProps: any
+    entry: E = EmptyObject,
+    parent: BaseTreeViewNode<E> | null = null,
+    moreProps: any = null
   ) {
     super(label, moreProps?.collapsibleState);
 

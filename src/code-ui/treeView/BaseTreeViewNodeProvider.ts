@@ -18,6 +18,7 @@ import { throttle } from '@dbux/common/src/util/scheduling';
 import BaseTreeViewNode from './BaseTreeViewNode';
 import { registerCommand } from '../../code-util/commands';
 import { getThemeResourcePath } from '../../code-util/codePaths';
+import EmptyTreeViewNode from './EmptyNode';
 
 /** @typedef { import("./BaseTreeViewNode").default } BaseTreeViewNode */
 
@@ -144,7 +145,7 @@ export default class BaseTreeViewNodeProvider<
       this.refreshPromise.startIfNotStarted();
     }
     catch (err) {
-      throw new NestedError(`${this.constructor.name}.refresh() failed`, err);
+      logError(`${this.constructor.name}.refresh() failed`, err);
     }
   }, 50);
 
@@ -275,8 +276,19 @@ export default class BaseTreeViewNodeProvider<
     }
   }
 
+  DefaultNodeClass?: typeof BaseTreeViewNode<E>;
+  EmptyNodeDescription?: string;
+  getRootEntries?: () => readonly E[];
+
   buildRoots(): N[] {
-    throw new Error('abstract method not implemented');
+    if (this.getRootEntries && this.DefaultNodeClass) {
+      const roots = this.getRootEntries().map(entry => this.buildNode(this.DefaultNodeClass!, entry, null));
+      if (!roots.length && this.EmptyNodeDescription) {
+        roots.push(EmptyTreeViewNode.get(this.EmptyNodeDescription));
+      }
+      return roots;
+    }
+    throw new Error('Either "buildRoots" or both, getRootEntries && defaultNodeClass must be implemented.');
   }
 
   buildNode<NC extends typeof BaseTreeViewNode<E>>(NodeClass: NC, entry: E, parent: N | null, moreProps = EmptyObject) {
@@ -287,7 +299,7 @@ export default class BaseTreeViewNodeProvider<
       ...newProps
     };
     const label = moreProps.labelOverride || NodeClass.makeLabel(entry, parent, moreProps, this);
-    return new NodeClass(this as any, label, entry, parent, moreProps);
+    return new NodeClass(this as any, label, entry, parent, moreProps) as N;
   }
 
   /**
@@ -335,7 +347,7 @@ export default class BaseTreeViewNodeProvider<
     return relativeIconPath && getThemeResourcePath(relativeIconPath) || undefined;
   }
 
-  _decorateNodes(parent: N | null, children: N[]) {
+  _decorateNodes(parent: N | null, children: readonly N[]) {
     const childIndexes = new Map();
 
     // assign ids
