@@ -46,8 +46,8 @@ export interface TreeViewNodeProviderOptions {
 }
 
 export default class BaseTreeViewNodeProvider<
-    E,
-    N extends BaseTreeViewNode<E>
+    N extends BaseTreeViewNode<E>,
+    E = N['entry']
   > implements TreeDataProvider<N> {
   _onDidChangeTreeData = new EventEmitter<N>();
   onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -81,17 +81,15 @@ export default class BaseTreeViewNodeProvider<
       this.treeView.onDidCollapseElement(this.handleCollapsibleStateChanged);
       this.treeView.onDidExpandElement(this.handleCollapsibleStateChanged);
     }
-  }
-
-  get defaultTitle() {
-    return this.treeView?.title || "";
-  }
-
-  initDefaultClickCommand() {
+    
     registerCommand(
       this.clickCommandName = `${this.treeViewName}.click`,
       (node: N) => this.handleClick(node)
     );
+  }
+
+  get defaultTitle() {
+    return this.treeView?.title || "";
   }
 
   /** ###########################################################################

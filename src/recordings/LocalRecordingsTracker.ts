@@ -1,7 +1,7 @@
 import { getDirectory } from "@replayio/replay/src/utils";
 import path from "path";
 import { readRecordings } from "./localRecordings";
-import RecordingList from "./RecordingList";
+import RecordingStore from "./RecordingStore";
 
 
 export function getRecordingsFile() {
@@ -9,14 +9,18 @@ export function getRecordingsFile() {
   return path.join(dir, "recordings.log");
 }
 
-export default class LocalRecordingsTracker {
-  list: RecordingList;
+export class LocalRecordingsTracker {
+  recordings = new RecordingStore();
 
   constructor() {
-    this.list = new RecordingList();
+    this.recordings = new RecordingStore();
   }
 
   async loadRecordings() {
-    this.list = new RecordingList(readRecordings(getRecordingsFile()));
+    const entries = readRecordings(getRecordingsFile());
+    this.recordings.set(entries);
+    // TODO: add a file watch
   }
 }
+
+export const localRecordingsTracker = new LocalRecordingsTracker();

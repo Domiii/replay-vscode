@@ -5,9 +5,6 @@ import EventHandlerList from "@dbux/common/src/util/EventHandlerList";
 import { TreeItem } from "vscode";
 import BaseTreeViewNodeProvider from "./BaseTreeViewNodeProvider";
 
-/** @typedef {import('@dbux/data/src/pathways/UserActionType').default} UserActionType */
-/** @typedef {import('./BaseTreeViewNodeProvider').default} BaseTreeViewNodeProvider */
-
 export default class BaseTreeViewNode<
   E
 > extends TreeItem {
@@ -21,22 +18,18 @@ export default class BaseTreeViewNode<
    */
   childClasses?: BaseTreeViewNode<E>[] = undefined;
 
-  treeNodeProvider: BaseTreeViewNodeProvider<E, BaseTreeViewNode<E>>;
+  treeNodeProvider: BaseTreeViewNodeProvider<BaseTreeViewNode<E>>;
 
   private _activeEventHandlers = new EventHandlerList();
 
-  static makeLabel<
-    E,
-    N extends BaseTreeViewNode<E>,
-    P extends BaseTreeViewNodeProvider<E, N>
-  >(entry: E, parent: N | null, moreProps: any, provider: P) {
+  static makeLabel(entry: E, parent: N | null, moreProps: any, provider: P) {
     return "(unnamed node)";
   }
 
   static makeProperties?: <
     E,
     N extends BaseTreeViewNode<E>,
-    P extends BaseTreeViewNodeProvider<E, N>
+    P extends BaseTreeViewNodeProvider<N>
   >(
     entry: E,
     parent: N | null,
@@ -47,13 +40,13 @@ export default class BaseTreeViewNode<
   static makeChildPropsDefault<
     E,
     N extends BaseTreeViewNode<E>,
-    P extends BaseTreeViewNodeProvider<E, N>
+    P extends BaseTreeViewNodeProvider<N>
   >(entry: E, parent: N | null, moreProps: any, provider: P) {
     return EmptyObject;
   }
 
   constructor(
-    treeNodeProvider: BaseTreeViewNodeProvider<E, BaseTreeViewNode<E>>,
+    treeNodeProvider: BaseTreeViewNodeProvider<BaseTreeViewNode<E>>,
     label: string,
     entry: E,
     parent: BaseTreeViewNode<E> | null,

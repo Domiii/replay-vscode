@@ -3198,6 +3198,7 @@ __metadata:
     strip-color: "npm:^0.1.0"
     ts-loader: "npm:^9.5.0"
     tsconfig-paths-webpack-plugin: "npm:^4.1.0"
+    tseep: "npm:^1.1.3"
     typescript: "npm:^5.2.2"
     utf-8-validate: "npm:^6.0.3"
     webpack: "npm:^5.89.0"
@@ -3806,6 +3807,13 @@ __metadata:
     minimist: "npm:^1.2.6"
     strip-bom: "npm:^3.0.0"
   checksum: 09a5877402d082bb1134930c10249edeebc0211f36150c35e1c542e5b91f1047b1ccf7da1e59babca1ef1f014c525510f4f870de7c9bda470c73bb4e2721b3ea
+  languageName: node
+  linkType: hard
+
+"tseep@npm:^1.1.3":
+  version: 1.1.3
+  resolution: "tseep@npm:1.1.3"
+  checksum: 5ea8ac6135afaf669181491cee3eed6dc5200d21bd5b92d220f5eea2bcff661c1de2454709a17b1cd755573b832cbbf977fd77ba8c4ae9207b04e6ecc6debec3
   languageName: node
   linkType: hard
 
