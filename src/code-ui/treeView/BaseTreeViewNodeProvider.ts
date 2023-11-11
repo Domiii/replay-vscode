@@ -1,3 +1,8 @@
+/**
+ * @file VSCode Extension TreeView utility.
+ * @see https://github.com/Domiii/dbux/tree/master/dbux-code/src/codeUtil/treeView/BaseTreeViewNodeProvider.js
+ */
+
 import isFunction from 'lodash/isFunction';
 import { TreeItemCollapsibleState, EventEmitter, window, TreeView, TreeViewExpansionEvent, TreeDataProvider } from 'vscode';
 /* @ts-ignore */
