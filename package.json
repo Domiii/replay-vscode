@@ -43,7 +43,7 @@
       },
       {
         "command": "replay.updateBrowsers",
-        "title": "Replay: Update the Replay Browser",
+        "title": "Replay: Update Replay",
         "icon": {
           "light": "resources/up-arrow.png",
           "dark": "resources/up-arrow.png"
@@ -66,6 +66,14 @@
         }
       },
       {
+        "command": "replay.deleteRecording",
+        "title": "Replay: Delete Recording",
+        "icon": {
+          "light": "resources/x.svg",
+          "dark": "resources/x.svg"
+        }
+      },
+      {
         "command": "replay.toggleRecordingLiveSync",
         "title": "Replay: Toggle Recording Live Sync",
         "icon": {
@@ -78,14 +86,14 @@
       "editor/title": [],
       "view/item/context": [
         {
-          "command": "replay.openRecording",
-          "when": "view == replayRecordingsView && viewItem == RecordingViewNode",
-          "group": "inline@1"
+          "command": "replay.toggleRecordingLiveSync",
+          "when": "view == replayRecordingsView && viewItem =~ /RecordingViewNode\\.uploaded/",
+          "group": "inline@2"
         },
         {
-          "command": "replay.toggleRecordingLiveSync",
-          "when": "view == replayRecordingsView && viewItem == RecordingViewNode",
-          "group": "inline@2"
+          "command": "replay.deleteRecording",
+          "when": "view == replayRecordingsView && viewItem =~ /RecordingViewNode.*/",
+          "group": "inline@1"
         }
       ],
       "view/title": [

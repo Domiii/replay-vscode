@@ -58,11 +58,14 @@ export default class BaseTreeViewNode<
     this.treeNodeProvider = treeNodeProvider;
     this.parent = parent;
 
-    // treeItem data
-    this.contextValue = this.constructor.name;
-
     // more custom props for this node
     Object.assign(this, moreProps);
+  }
+  
+  get 
+    /* @ts-ignore */
+    contextValue() {
+      return this.constructor.name;
   }
 
   get defaultCollapsibleState() {

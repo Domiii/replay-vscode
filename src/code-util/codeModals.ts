@@ -51,7 +51,7 @@ export async function showInformationMessage(message: string, btnConfig?: any, m
   return cbResult === undefined ? null : cbResult;
 }
 
-export async function showWarningMessage(message: string, btnConfig: any, messageCfg = EmptyObject, cancelCallback?: Function) {
+export async function showWarningMessage(message: string, btnConfig?: any, messageCfg = EmptyObject, cancelCallback?: Function) {
   btnConfig = btnConfig || EmptyObject;
   message = `[Replay] ${message}`;
   warn(message);

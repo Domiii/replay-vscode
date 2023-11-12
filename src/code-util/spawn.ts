@@ -12,14 +12,20 @@ export async function spawnAsync(
     options?: SpawnOptionsWithoutStdio,
     title?: string,
     successMessage?: string,
+    cancellable?: boolean
   }
 ) {
-  const { command, args, options, title, successMessage } = spawnArgs;
+  const { command, args, options, title, successMessage, cancellable } = spawnArgs;
   const process = spawn(command, args, options);
     
   let code: number | null = null, signal: string | null = null;
   let errorOut: string | null = null;
-  await runTaskWithProgressBar(async (progress) => {
+  let cancelled = false;
+  await runTaskWithProgressBar(async (progress, cancellationToken) => {
+    cancellationToken.onCancellationRequested(e => {
+      cancelled = true;
+      process.kill();
+    });
     await Promise.all([
       process.stdout ? (async () => {
         for await (const line of streamToLineIterator(process.stdout)) {
@@ -38,11 +44,13 @@ export async function spawnAsync(
         process.on("exit", (_code, _signal) => void (code = _code, signal = _signal, resolve()));
       }),
     ]);
-  }, { title });
-  if (code || signal) {
-    throw new Error(`Process failed code=${code}, signal=${signal} - ERROR: ${(errorOut as string | null)?.trim() || ""}`);
-  }
-  if (successMessage) {
-    showInformationMessage(successMessage);
+  }, { title, cancellable });
+  if (!cancelled) {
+    if (code || signal) {
+      throw new Error(`Process failed code=${code}, signal=${signal} - ERROR: ${(errorOut as string | null)?.trim() || ""}`);
+    }
+    if (successMessage) {
+      showInformationMessage(successMessage);
+    }
   }
 }

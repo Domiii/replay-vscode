@@ -31,7 +31,7 @@ export async function runTaskWithProgressBar<R>(cb: ProgressBarTask<R>, optionsI
   const options = defaultsDeep(optionsInput, {
     cancellable: false,
     location: ProgressLocation.Notification,
-    title: "",
+    title: ""
   });
   options.title = `[Dbux] ${options.title}`;
 
