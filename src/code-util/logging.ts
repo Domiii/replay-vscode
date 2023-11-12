@@ -1,9 +1,7 @@
-/* @ts-ignore */
-import EmptyObject from '@dbux/common/src/util/EmptyObject';
-/* @ts-ignore */
-import { onLogError } from '@dbux/common/src/log/logger';
-/* @ts-ignore */
-import { showInformationMessage, showErrorMessage } from './codeUtil/codeModals';
+import EmptyObject from "../util/EmptyObject";
+import { onLogError } from "../util/logging";
+import { showErrorMessage, showInformationMessage } from "./codeModals";
+
 
 let isShowingAllError = true;
 

@@ -5,6 +5,7 @@ import { spawnAsync } from "./code-util/spawn";
 import { confirm, showInformationMessage } from "./code-util/codeModals";
 import { RecordingViewNode, getRecordingLabel } from "./views/RecordingsView";
 import { localRecordingsTracker } from "./replay-recordings/LocalRecordingsTracker";
+import { replayLiveSyncManager } from "./replay-live-sync/ReplayLiveSyncManager";
 
 export function initCommands() {
   /** ###########################################################################
@@ -56,15 +57,7 @@ export function initCommands() {
       localRecordingsTracker.loadRecordings();
     }
   });
-  registerCommand("replay.toggleRecordingLiveSync", () => {
-    // TODO
+  registerCommand("replay.toggleRecordingLiveSync", async (node: RecordingViewNode) => {
+    await replayLiveSyncManager.toggleSync(node.entry);
   });
-}
-
-async function streamStdioToBuffer(stdio: Readable) {
-  const chunks = [];
-  for await (const chunk of stdio) {
-    chunks.push(chunk);
-  }
-  return Buffer.concat(chunks).toString();
 }

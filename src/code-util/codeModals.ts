@@ -9,9 +9,8 @@ import isPlainObject from 'lodash/isPlainObject';
 import isString from 'lodash/isString';
 /** @ts-ignore */
 import EmptyObject from '@dbux/common/src/util/EmptyObject';
-/** @ts-ignore */
-import { newLogger } from '@dbux/common/src/log/logger';
 import { showOutputChannel } from './outputChannel';
+import { newLogger } from '../util/logging';
 
 // eslint-disable-next-line no-unused-vars
 const { log, debug, warn, error: logError } = newLogger('Notifications');

@@ -1,12 +1,12 @@
 /* @ts-ignore */
-import { newLogger } from "@dbux/common/src/log/logger";
 import BaseTreeViewNodeProvider from "../code-ui/treeView/BaseTreeViewNodeProvider";
 import BaseTreeViewNode from "../code-ui/treeView/BaseTreeViewNode";
 import { RecordingEntry } from "@replayio/replay";
 import { localRecordingsTracker } from "../replay-recordings/LocalRecordingsTracker";
 import { openUrl } from "../util/system";
-import { confirm, showInformationMessage, showWarningMessage } from "../code-util/codeModals";
+import { showWarningMessage } from "../code-util/codeModals";
 import { spawnAsync } from "../code-util/spawn";
+import { replayLiveSyncManager } from "../replay-live-sync/ReplayLiveSyncManager";
 
 /** ###########################################################################
  * {@link RecordingsView}
@@ -65,7 +65,9 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
   static makeLabel(recording: RecordingEntry) {
     const uri = getRecordingLabel(recording);
     let icon = StatusIcons[recording.status] || "";
-    
+    if (replayLiveSyncManager.syncId == recording.id) {
+      icon = "⭕";
+    }
     return `${icon} ${uri}`;
   }
 

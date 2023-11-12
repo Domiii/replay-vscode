@@ -12,10 +12,12 @@ export async function spawnAsync(
     options?: SpawnOptionsWithoutStdio,
     title?: string,
     successMessage?: string,
-    cancellable?: boolean
+    cancellable?: boolean,
+    showUpdates?: boolean
   }
 ) {
-  const { command, args, options, title, successMessage, cancellable } = spawnArgs;
+  const { command, args, options, title, successMessage, cancellable, showUpdates } = spawnArgs;
+  console.debug(`$ ${command} ${args?.map(arg => `"${arg}"`).join(" ") || ""}`);
   const process = spawn(command, args, options);
     
   let code: number | null = null, signal: string | null = null;
@@ -29,13 +31,19 @@ export async function spawnAsync(
     await Promise.all([
       process.stdout ? (async () => {
         for await (const line of streamToLineIterator(process.stdout)) {
-          progress.report({ message: line });
+          console.debug(`> ${line}`);
+          if (showUpdates) {
+            progress.report({ message: line });
+          }
         }
       })() : null,
       process.stdout ? (async () => {
         errorOut = "";
         for await (const line of streamToLineIterator(process.stdout)) {
-          progress.report({ message: line });
+          console.error(`> ${line}`);
+          if (showUpdates) {
+            progress.report({ message: line });
+          }
           errorOut += line + "\n";
         }
       })() : null,

@@ -10,8 +10,6 @@ import SyncPromise from '@dbux/common/src/util/SyncPromise';
 /* @ts-ignore */
 import EmptyObject from '@dbux/common/src/util/EmptyObject';
 /* @ts-ignore */
-import { newLogger, Logger } from '@dbux/common/src/log/logger';
-/* @ts-ignore */
 import NestedError from '@dbux/common/src/NestedError';
 /* @ts-ignore */
 import { throttle } from '@dbux/common/src/util/scheduling';
@@ -19,8 +17,7 @@ import BaseTreeViewNode from './BaseTreeViewNode';
 import { registerCommand } from '../../code-util/registerCommand';
 import { getThemeResourcePath } from '../../code-util/codePaths';
 import EmptyTreeViewNode from './EmptyNode';
-
-/** @typedef { import("./BaseTreeViewNode").default } BaseTreeViewNode */
+import { Logger, newLogger } from '../../util/logging';
 
 // eslint-disable-next-line no-unused-vars
 const { log, debug, warn, error: logError } = newLogger('BaseTreeViewNodeProvider');

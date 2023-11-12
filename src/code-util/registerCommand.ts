@@ -1,10 +1,8 @@
 import {
-  ExtensionContext,
   commands
 } from 'vscode';
-/* @ts-ignore */
-import { newLogger } from '@dbux/common/src/log/logger';
 import currentContext from './currentContext';
+import { newLogger } from '../util/logging';
 
 // eslint-disable-next-line no-unused-vars
 const { log, debug, warn, error: logError } = newLogger('Command');

@@ -1,8 +1,6 @@
 import { OutputChannel, window } from 'vscode';
 /* @ts-ignore */
 import strip from 'strip-color';
-/* @ts-ignore */
-import { addOutputStreams } from '@dbux/common/src/log/logger';
 
 export default class OutputChannelWrapper {
   _channel: OutputChannel;
@@ -28,14 +26,14 @@ export default class OutputChannelWrapper {
 }
 
 
-const outputChannel = new OutputChannelWrapper('Dbux');
+const outputChannel = new OutputChannelWrapper('Replay');
 
-addOutputStreams({
-  log: outputChannel.log.bind(outputChannel),
-  warn: outputChannel.log.bind(outputChannel),
-  error: outputChannel.log.bind(outputChannel),
-  debug: outputChannel.log.bind(outputChannel)
-}, true);
+// addOutputStreams({
+//   log: outputChannel.log.bind(outputChannel),
+//   warn: outputChannel.log.bind(outputChannel),
+//   error: outputChannel.log.bind(outputChannel),
+//   debug: outputChannel.log.bind(outputChannel)
+// }, true);
 
 export function showOutputChannel() {
   outputChannel.show();

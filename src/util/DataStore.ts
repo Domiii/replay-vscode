@@ -28,6 +28,13 @@ export default class DataStore<V extends KeyedData<K>, K extends KeyType = V['id
    * queries
    * ##########################################################################*/
 
+  /**
+   * Some stores allow dynamically querying a value if its not cached yet.
+   */
+  async queryByKey(k: K) {
+    throw new Error(`queryByKey not supported for ${this.constructor.name}`);
+  }
+
   getByKey(k: K) {
     return this.dataByKey.get(k);
   }
