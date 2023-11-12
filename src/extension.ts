@@ -6,6 +6,7 @@ import { initCurrentContext } from "./code-util/currentContext";
 import { initRecordingsView } from "./views/RecordingsView";
 import { initCommands } from "./commands";
 import { initLogging } from "./code-util/logging";
+import { initHitCountManager } from "./replay-live-sync/HitCountManager";
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -16,6 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Init all the things.
 	initLogging();
 	initCommands();
+	initHitCountManager();
 	initRecordingsView();
 }
 

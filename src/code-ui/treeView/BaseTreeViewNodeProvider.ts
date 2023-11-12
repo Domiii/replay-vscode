@@ -20,7 +20,7 @@ import EmptyTreeViewNode from './EmptyNode';
 import { Logger, newLogger } from '../../util/logging';
 
 // eslint-disable-next-line no-unused-vars
-const { log, debug, warn, error: logError } = newLogger('BaseTreeViewNodeProvider');
+const { log, debug, warn, error: logError, exception: logException } = newLogger('BaseTreeViewNodeProvider');
 
 const nodeClassIds = new Map<any, number>();
 function makeNodeClassId<E, NC extends typeof BaseTreeViewNode<E>>(NodeClass: NC) {
@@ -142,7 +142,7 @@ export default class BaseTreeViewNodeProvider<
       this.refreshPromise.startIfNotStarted();
     }
     catch (err) {
-      logError(`${this.constructor.name}.refresh() failed`, err);
+      logException(err, `${this.constructor.name}.refresh() failed`);
     }
   }, 50);
 

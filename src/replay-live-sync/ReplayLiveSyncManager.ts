@@ -1,7 +1,7 @@
 import { RecordingEntry } from "@replayio/replay";
 import { EventEmitter } from "tseep";
-import { ApiClient } from "../replay-api/ApiClient";
 import { commands } from "vscode";
+import { ApiClient } from "../replay-api/ApiClient";
 
 export default class ReplayLiveSyncManager {
   recording: RecordingEntry | null = null;
@@ -42,8 +42,8 @@ export default class ReplayLiveSyncManager {
     this._events.emit("startSync", this);
     commands.executeCommand('setContext', 'replay.context.liveSyncId', recording.id);
 
-    // await this.client.runExperiment(recording.id);
-    await this.client.runExperiment();
+    // Start session.
+    await this.client.startSession(recording.id);
   }
 
   stopSync() {

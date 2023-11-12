@@ -5,7 +5,7 @@ import currentContext from './currentContext';
 import { newLogger } from '../util/logging';
 
 // eslint-disable-next-line no-unused-vars
-const { log, debug, warn, error: logError } = newLogger('Command');
+const { log, debug, warn, error: logError, exception: logException } = newLogger('Command');
 
 /**
  * Wrap command handlers with error loggin.
@@ -17,7 +17,7 @@ export function registerCommand(commandName: string, func: (...args: any[]) => a
         return await f(...args);
       }
       catch (err) {
-        logError(`'${commandName}' failed:`, err);
+        logException(err, `'${commandName}' failed -`);
         // throw err;
         return null;
       }

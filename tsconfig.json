@@ -8,11 +8,15 @@
 		"baseUrl": ".",
 		"rootDir": ".",
 		"paths": {
-			"@sentry/react": ["third-party/mocks/@sentry/react/index.js"],
-			"replay-next/components/protocol/ProtocolMessagesStore": ["third-party/mocks/replay-next/ProtocolMessagesStore.js"],
+			// get devtools ready
+			// "replay-next/components/protocol/ProtocolMessagesStore": ["third-party/mocks/replay-next/ProtocolMessagesStore.js"],
 			"shared/*": [".yalc/shared/*"],
-			"protocol/*": [".yalc/protocol/*"]
-			// "replay-next": ["third-party/mocks/replay-next/*"]
+			"protocol/*": [".yalc/protocol/*"],
+			"replay-next": [".yalc/replay-next/*"],
+			
+			// stub out some "evil" dependencies
+			"@sentry/react": ["third-party/mocks/@sentry/react/index.js"],
+			"react": ["third-party/mocks/react.js"]
 		},
 		"esModuleInterop": true, /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. */
 		
@@ -37,6 +41,6 @@
 		// "scripts"
 	],
 	"exclude": [
-		"third-party/mocks/replay-next/ProtocolMessagesStore.js"
+		"third-party/mocks/**/*"
 	]
 }

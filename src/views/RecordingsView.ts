@@ -93,7 +93,8 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
   }
 
   async handleClick() {
-    const { id, status } = this.entry;
+    const { id, status, buildId } = this.entry;
+
     switch (status) {
       case "uploaded":
         await openUrl(`https://app.replay.io/recording/${id}`);

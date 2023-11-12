@@ -1,4 +1,5 @@
 import isString from 'lodash/isString';
+import isPlainObject from 'lodash/isPlainObject';
 import { EventEmitter } from "tseep";
 /* @ts-ignore */
 import { err2String } from '@dbux/common/src/util/errorLog';
@@ -102,6 +103,8 @@ export class Logger {
     this._addLoggers(logFunctions, logWrapper);
   }
 
+  exception = logException;
+
   _addLoggers(logFunctions: any, logWrapper: any) {
     for (const name in logFunctions) {
       const f = logFunctions[name];
@@ -173,6 +176,25 @@ export function logError(ns: string, ...args: any[]) {
   ns = wrapNs(ns);
   outputStreams.error(ns, ...args);
   report('error', ns, ...args);
+}
+
+const reportedExceptions = new WeakSet<any>();
+
+export function logException(err: unknown, ns: string, ...args: any[]) {
+  if (isPlainObject(err)) {
+    if (reportedExceptions.has(err)) {
+      logWarn(ns, ...args, `(repeated error: ${
+        /* @ts-ignore */
+        err?.message || err
+      })`);
+      return;
+    }
+    reportedExceptions.add(err);
+  }
+  else {
+    console.warn(`bad call to logException did not provide an Error object as first argument:`, err, ns, ...args);
+  }
+  logError(ns, ...args, err);
 }
 
 function logTrace(ns: string, ...args: any[]) {

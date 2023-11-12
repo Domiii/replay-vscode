@@ -10,7 +10,7 @@ const DispatchAddress = "wss://dispatch.replay.io";
 const SampleRecordingId = "cec0e180-e974-4006-967e-332898dee2e8";
 const SamplePoint = "31128880624384868365";
 
-const { log, debug, warn, error: logError } = newLogger("ApiClient");
+const { log, debug, warn, error: logError, exception: logException } = newLogger("ApiClient");
 
 /** ###########################################################################
  * Singleton workaround.
@@ -18,6 +18,7 @@ const { log, debug, warn, error: logError } = newLogger("ApiClient");
 
 let gHackfixInited = false;
 let gCurrentSocket: WebSocket | null = null;
+
 const sendCommandEvents = new EventEmitter<{
   commandStart: (method: any, params: any, sessionId?: string, pauseId?: string) => void;
   commandEnd: (method: any, params: any, sessionId?: string, pauseId?: string) => void;
@@ -47,7 +48,11 @@ function makeSendCommandWrapper(sendCommand: any) {
     try {
       debug(`command start: ${args[0]}...`);
       sendCommandEvents.emit("commandStart", ...args);
-      return sendCommand(...args);
+      return await sendCommand(...args);
+    }
+    catch (err: unknown) {
+      logException(err, `Command Failure`);
+      throw err;
     }
     finally {
       debug(` (command end: ${args[0]})`);
@@ -72,7 +77,7 @@ function initHackfixes() {
 
   // Add an error handler.
   client.Recording.addSessionErrorListener((err) => {
-    logError(`session error ${err.code}: ${err.message}`);
+    logError(`[SESSION ERROR] ${err.code}: ${err.message}`);
   });
 }
 
