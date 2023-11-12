@@ -2,13 +2,15 @@ import { writeFileSync } from "fs";
 import path from "path";
 
 function makeSvg(i: number, col: string) {
-  const w = 24;
-  const h = 16;
-  const y = 10;
+  const w = 32 * 5;
+  const h = 16 * 5;
+  const y = 11 * 5;
   return `
   <?xml version="1.0" encoding="UTF-8"?>
   <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${w}pt" height="${h}pt" viewBox="0 0 ${w} ${h}" version="1.1">
-    <text x="1pt" y="${y}pt" font-weight="bold" fill="${col}">${i}</text>
+    <text x="50%" y="${y}pt" font-size="80pt" font-weight="bold"
+    text-anchor="middle"
+    fill="${col}">${i}</text>
   </svg>
 `.trim();
 }
@@ -33,12 +35,13 @@ function makeHsl(heat: number) {
 
 (async function main() {
   const dir = path.join(__dirname, "../resources/dark/num");
-  const min = 0;
-  const max = 10;
+  const heatMin = 1;
+  const heatMax = 100;
+  const N = 100;
   
-  const heatUnit = 1 / (max - min);
-  for (let i = 1; i <= 10; ++i) {
-    const color = makeHsl(i * heatUnit);
+  const heatUnit = 1 / (heatMax - heatMin);
+  for (let i = 1; i <= N; ++i) {
+    const color = makeHsl(Math.min(1, i * heatUnit));
     const svg = makeSvg(i, color);
     writeFileSync(path.join(dir, i + "") + ".svg", svg);
   }

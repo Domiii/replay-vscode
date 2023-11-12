@@ -12,7 +12,7 @@ import codeDecorationRegistry, {
   DecorationEntry,
 } from "../CodeDecorationRegistry";
 import SourceTracker from "../../replay-api/sources/SourceTiles";
-import { vscodeLineToReplayLine } from "../../code-util/rangeUtil";
+import { replayLineToVSCodeLine, vscodeLineToReplayLine } from "../../code-util/rangeUtil";
 import { editorSourceManager } from "./EditorSourceManager";
 
 export function makeHitCountDeco(x: any) {
@@ -50,21 +50,18 @@ export function updateDecorations(
   maxLine: number
 ) {
   const allDecos = new Map<TextEditorDecorationType, DecorationOptions[]>();
-
   
   for (const range of editorSourceManager.getVisibleAndBreakableRanges(editor, maxLine)) {
-    const result = sourceTracker.getHitCounts(range.start, range.end);
     // TODO: show load indicators
-    if (!result) {
-      continue;
-    }
-    for (const [i, entry] of result) {
+    for (let replayLine = range.start; replayLine <= range.end; ++replayLine) {
+      const count = sourceTracker.getHitCount(replayLine);
+      const editorLine = replayLineToVSCodeLine(replayLine);
       const decoEntry = {
-        range: new Range(new Position(i, 1), new Position(i, 1)),
+        range: new Range(new Position(editorLine, 1), new Position(editorLine, 1)),
         hoverMessage: "hi!",
       } as DecorationOptions;
 
-      const type = hitCountDecoRegistry.getOrCreate(entry.count);
+      const type = hitCountDecoRegistry.getOrCreate(count);
       let decos = allDecos.get(type);
       if (!decos) {
         allDecos.set(type, (decos = []));

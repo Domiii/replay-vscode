@@ -93,8 +93,11 @@ export default class EditorSourceManager {
   async handleNewEditor(source: Source, textEditor: TextEditor) {
     const focusRange = null;
 
-    // TODO: unsubscribe
     // TODO: track the trackers
+    // TODO: handle unsubscribe callback
+    //    -> unsubscribe with tracker
+    //    -> add as disposable to context
+    // TODO: track SyncManager status
     
     const sourceTracker = new SourceTracker(source.sourceId);
 
@@ -105,9 +108,11 @@ export default class EditorSourceManager {
     }
 
     const unsubscribe = sourceHitCountsCache.subscribe(
-      (e) => {
+      async (e) => {
         log(`sourceHits`, e);
         try {
+          // Hackfix: Our promise handlers are registered after their promise handlers, so we'll give it an extra tick to come around.
+          await 0;
           updateEditorSourceDecorations(sourceTracker, textEditor, maxLine);
         } catch (err) {
           logException(err, "sourceHitCountsCache.subscribe failed");

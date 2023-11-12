@@ -1,4 +1,4 @@
-import { STATUS_NOT_FOUND, STATUS_RESOLVED } from "suspense";
+import { STATUS_NOT_FOUND, STATUS_RESOLVED, isPromiseLike } from "suspense";
 import { sourceHitCountsCache } from "replay-next/src/suspense/SourceHitCountsCache";
 import { replayLiveSyncManager } from "../ReplayLiveSyncManager";
 import { LineHitCounts } from "shared/client/types";
@@ -12,6 +12,7 @@ export const SourceTileSize = 4; // 100;
  */
 export default class SourceTracker {
   sourceId: string;
+  hitCountsByLine = new Map<number, LineHitCounts>();
 
   constructor(sourceId: string) {
     this.sourceId = sourceId;
@@ -39,11 +40,16 @@ export default class SourceTracker {
     }
   }
 
-  getHitCounts(startLine: number, endLine: number) {
-    if (startLine < 1 || endLine < startLine) {
-      throw new Error(`Invalid line range: ${startLine}-${endLine}`);
-    }
-    return this.readHitCounts(startLine, endLine, false) as [number, LineHitCounts][] | null;
+  // NOTE: This does not work, seemingly because `metadata.recordMap` in the cache is never updated.
+  // getHitCounts(startLine: number, endLine: number) {
+  //   if (startLine < 1 || endLine < startLine) {
+  //     throw new Error(`Invalid line range: ${startLine}-${endLine}`);
+  //   }
+  //   return this.readHitCounts(startLine, endLine, false) as [number, LineHitCounts][] | null;
+  // }
+  getHitCount(line: number) {
+    // TODO: Also provide a way to determine if the hit count is still PENDING.
+    return this.hitCountsByLine.get(line)?.count;
   }
 
   private readHitCounts(startLine: number, endLine: number, doRead: boolean) {
@@ -57,7 +63,7 @@ export default class SourceTracker {
     );
 
     if ((doRead && status == STATUS_NOT_FOUND) || status == STATUS_RESOLVED) {
-      return sourceHitCountsCache.readAsync(
+      const result = sourceHitCountsCache.readAsync(
         startLine,
         endLine,
         replayLiveSyncManager.client!,
@@ -65,6 +71,13 @@ export default class SourceTracker {
         null
         // focusRange ? toPointRange(focusRange) : null
       ) || null;
+      if (isPromiseLike(result)) {
+        (result).then((entries) => {
+          for (const [line, hitCount] of entries) {
+            this.hitCountsByLine.set(line, hitCount);
+          }
+        });
+      }
     }
     return null;
   }

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24pt" height="16pt" viewBox="0 0 24 16" version="1.1">
-    <text x="1pt" y="10pt" font-weight="bold" fill="hsl(72, 55%, 55%)">4</text>
+  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="160pt" height="80pt" viewBox="0 0 160 80" version="1.1">
+    <text x="50%" y="55pt" font-size="80pt" font-weight="bold"
+    text-anchor="middle"
+    fill="hsl(115.15151515151516, 55%, 55%)">4</text>
   </svg>
