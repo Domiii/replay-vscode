@@ -19,9 +19,9 @@ class RecordingsView extends BaseTreeViewNodeProvider<RecordingViewNode> {
 
   initOnActivate() {
     // Register event handlers.
-    localRecordingsTracker.recordings.events.on("update", () => {
-      this.refresh();
-    });
+    localRecordingsTracker.recordings.events.on("update", this.refresh);
+    replayLiveSyncManager.events.on("startSync", this.refresh);
+    replayLiveSyncManager.events.on("stopSync", this.refresh);
 
     // Start rendering.
     this.refresh();
@@ -50,6 +50,8 @@ const StatusIcons = {
   unusable: "❓",
 };
 
+export type FullStatus = "onDisk" | "unknown" | "uploaded" | "crashed" | "startedWrite" | "startedUpload" | "crashUploaded" | "unusable" | "syncing";
+
 /** ###########################################################################
  * {@link RecordingViewNode}
  * ##########################################################################*/
@@ -66,7 +68,7 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
     const uri = getRecordingLabel(recording);
     let icon = StatusIcons[recording.status] || "";
     if (replayLiveSyncManager.syncId == recording.id) {
-      icon = "⭕";
+      icon = "🔴";
     }
     return `${icon} ${uri}`;
   }
@@ -78,8 +80,16 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
     };
   }
 
+  get isSyncing() {
+    return replayLiveSyncManager.syncId == this.entry.id;
+  }
+
+  get fullStatus() {
+    return this.isSyncing ? "syncing" : this.entry.status;
+  }
+
   get contextValue() {
-    return this.constructor.name + `.${this.entry.status}`;
+    return `${this.constructor.name}.${this.entry.id}.${this.fullStatus}`;
   }
 
   async handleClick() {

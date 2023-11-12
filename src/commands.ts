@@ -60,4 +60,7 @@ export function initCommands() {
   registerCommand("replay.toggleRecordingLiveSync", async (node: RecordingViewNode) => {
     await replayLiveSyncManager.toggleSync(node.entry);
   });
+  registerCommand("replay.toggleRecordingLiveSyncActive", async () => {
+    await replayLiveSyncManager.stopSync();
+  });
 }

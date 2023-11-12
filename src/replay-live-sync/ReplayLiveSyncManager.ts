@@ -1,6 +1,7 @@
 import { RecordingEntry } from "@replayio/replay";
 import { EventEmitter } from "tseep";
 import { ApiClient } from "../replay-api/ApiClient";
+import { commands } from "vscode";
 
 export default class ReplayLiveSyncManager {
   recording: RecordingEntry | null = null;
@@ -39,6 +40,7 @@ export default class ReplayLiveSyncManager {
     });
     this.recording = recording;
     this._events.emit("startSync", this);
+    commands.executeCommand('setContext', 'replay.context.liveSyncId', recording.id);
 
     // await this.client.runExperiment(recording.id);
     await this.client.runExperiment();
@@ -47,6 +49,7 @@ export default class ReplayLiveSyncManager {
   stopSync() {
     if (this.client) {
       console.debug(`ReplayLiveSyncManager.stopSync ${this.recording?.id}`);
+      commands.executeCommand('setContext', 'replay.context.liveSyncId', null);
       this._events.emit("stopSync", this);
       this.client.close();
       this.client = null;

@@ -77,17 +77,36 @@
         "command": "replay.toggleRecordingLiveSync",
         "title": "Replay: Toggle Recording Live Sync",
         "icon": {
-          "light": "resources/live.svg",
-          "dark": "resources/live.svg"
+          "light": "resources/light/play.svg",
+          "dark": "resources/dark/play.svg"
+        }
+      },
+      {
+        "command": "replay.toggleRecordingLiveSyncActive",
+        "title": "Replay: Live Sync",
+        "icon": {
+          "light": "resources/live-in-progress.svg",
+          "dark": "resources/live-in-progress.svg"
         }
       }
     ],
     "menus": {
-      "editor/title": [],
+      "editor/title": [
+        {
+          "command": "replay.toggleRecordingLiveSyncActive",
+          "when": "replay.context.liveSyncId",
+          "group": "navigation@1"
+        }
+      ],
       "view/item/context": [
         {
           "command": "replay.toggleRecordingLiveSync",
-          "when": "view == replayRecordingsView && viewItem =~ /RecordingViewNode\\.uploaded/",
+          "when": "viewItem =~ /RecordingViewNode.*?\\.uploaded.*/",
+          "group": "inline@1"
+        },
+        {
+          "command": "replay.toggleRecordingLiveSyncActive",
+          "when": "viewItem =~ /RecordingViewNode.*?\\.syncing.*/",
           "group": "inline@1"
         },
         {

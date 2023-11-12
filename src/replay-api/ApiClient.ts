@@ -16,7 +16,7 @@ const { log, debug, warn, error: logError } = newLogger("ApiClient");
  * Singleton workaround.
  * ##########################################################################*/
 
-let gWorkarounInit = false;
+let gHackfixInited = false;
 let gCurrentSocket: WebSocket | null = null;
 const sendCommandEvents = new EventEmitter<{
   commandStart: (method: any, params: any, sessionId?: string, pauseId?: string) => void;
@@ -27,10 +27,6 @@ const sendCommandEvents = new EventEmitter<{
  * Hackfix for the socket being a singleton.
  */
 function initWebSocketHackfix() {
-  if (gWorkarounInit) {
-    return;
-  }
-  gWorkarounInit = true;
   window.WebSocket = class WebSocketWrapper extends WebSocket {
     constructor(...args: [any, any, any]) {
       super(...args);
@@ -60,7 +56,12 @@ function makeSendCommandWrapper(sendCommand: any) {
   };
 }
 
-function initGlobals() {
+function initHackfixes() {
+  if (gHackfixInited) {
+    return;
+  }
+  gHackfixInited = true;
+
   // Get one of the global sockets.
   initWebSocketHackfix();
 
@@ -88,7 +89,7 @@ export class ApiClient extends ReplayClient {
 
   constructor() {
     super(DispatchAddress);
-    initGlobals();
+    initHackfixes();
 
     sendCommandEvents.addListener("commandStart", this._onCommandStart);
     sendCommandEvents.addListener("commandEnd", this._onCommandEnd);
