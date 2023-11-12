@@ -4,9 +4,9 @@ import BaseTreeViewNode from "../code-ui/treeView/BaseTreeViewNode";
 import { RecordingEntry } from "@replayio/replay";
 import { localRecordingsTracker } from "../replay-recordings/LocalRecordingsTracker";
 import { openUrl } from "../util/system";
-import { showWarningMessage } from "../code-util/codeModals";
+import { confirm, showWarningMessage } from "../code-util/codeModals";
 import { spawnAsync } from "../code-util/spawn";
-import { replayLiveSyncManager } from "../replay-live-sync/ReplayLiveSyncManager";
+import { replayLiveSyncManager } from "../replay-api/ReplayLiveSyncManager";
 
 /** ###########################################################################
  * {@link RecordingsView}
@@ -50,7 +50,16 @@ const StatusIcons = {
   unusable: "❓",
 };
 
-export type FullStatus = "onDisk" | "unknown" | "uploaded" | "crashed" | "startedWrite" | "startedUpload" | "crashUploaded" | "unusable" | "syncing";
+export type FullStatus =
+  | "onDisk"
+  | "unknown"
+  | "uploaded"
+  | "crashed"
+  | "startedWrite"
+  | "startedUpload"
+  | "crashUploaded"
+  | "unusable"
+  | "syncing";
 
 /** ###########################################################################
  * {@link RecordingViewNode}
@@ -59,6 +68,8 @@ export type FullStatus = "onDisk" | "unknown" | "uploaded" | "crashed" | "starte
 export function getRecordingLabel(recording: RecordingEntry) {
   return recording.metadata?.uri || recording.metadata?.title || "";
 }
+
+const busyMap = new Map<string, number>();
 
 export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
   /**
@@ -76,7 +87,7 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
   static makeProperties(recording: RecordingEntry) {
     return {
       description: `${recording.createTime?.toLocaleDateString()} ${recording.createTime?.toLocaleTimeString()}`,
-      tooltip: recording.id
+      tooltip: recording.id,
     };
   }
 
@@ -92,34 +103,54 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
     return `${this.constructor.name}.${this.entry.id}.${this.fullStatus}`;
   }
 
+  get busy() {
+    return busyMap.get(this.entry.id) || 0;
+  }
+
   async handleClick() {
     const { id, status, buildId } = this.entry;
 
     switch (status) {
       case "uploaded":
-        await openUrl(`https://app.replay.io/recording/${id}`);
-        break;
-      case "crashed":
-      case "onDisk":
-      case "startedWrite":
-        // await confirm(`Upload the ${status === "crashed" ? "crash report" : "recording"}?`);
-        try {
-          await spawnAsync({
-            command: "replay",
-            args: ["upload", id],
-            title:"Uploading Replay",
-            cancellable: true
-          });
-        }
-        finally {
-          localRecordingsTracker.loadRecordings();
-        }
-        break;
-      case "startedUpload":
-        showWarningMessage("Upload started but did not finish. You probably have to delete it remotely and upload again. Reach out to us for more help.");
-        break;
+        openUrl(`https://app.replay.io/recording/${id}`);
+        return;
     }
 
+    if (this.busy) {
+      return;
+    }
+
+    busyMap.set(this.entry.id, this.busy + 1);
+    this.treeNodeProvider.refreshNode(this.parent);
+    try {
+      switch (status) {
+        case "crashed":
+        case "onDisk":
+        case "startedWrite":
+          await confirm(
+            `Upload the ${status === "crashed" ? "crash report" : "recording"}?`
+          );
+          try {
+            await spawnAsync({
+              command: "replay",
+              args: ["upload", id],
+              title: "Uploading Replay",
+              cancellable: true,
+            });
+          } finally {
+            await localRecordingsTracker.loadRecordings();
+          }
+          break;
+        case "startedUpload":
+          showWarningMessage(
+            "Upload started but did not finish. You probably have to delete it remotely and upload again. Reach out to us for more help."
+          );
+          break;
+      }
+    } finally {
+      busyMap.set(this.entry.id, this.busy - 1);
+      this.treeNodeProvider.refreshNode(this.parent);
+    }
   }
 }
 

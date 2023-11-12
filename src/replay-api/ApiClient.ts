@@ -45,17 +45,19 @@ function makeSendCommandWrapper(sendCommand: any) {
    * pauseId?: string
    */
   return async (...args: [any, any, any, any]) => {
+    let result;
     try {
       debug(`command start: ${args[0]}...`);
       sendCommandEvents.emit("commandStart", ...args);
-      return await sendCommand(...args);
+      result = await sendCommand(...args);
+      return result;
     }
     catch (err: unknown) {
       logException(err, `Command Failure`);
       throw err;
     }
     finally {
-      debug(` (command end: ${args[0]})`);
+      debug(` (command end: ${args[0]} = ${JSON.stringify(result)})`);
       sendCommandEvents.emit("commandEnd", ...args);
     }
   };
@@ -87,9 +89,9 @@ function initHackfixes() {
 
 export class ApiClient extends ReplayClient {
   socket: WebSocket | null = null;
-  private loading: number = 0;
+  private busy: number = 0;
   private _events = new EventEmitter<{
-    loadingStateUpdate: (loading: boolean, client: ApiClient) => void;
+    busyStateUpdate: (loading: boolean, client: ApiClient) => void;
   }>();
 
   constructor() {
@@ -104,8 +106,8 @@ export class ApiClient extends ReplayClient {
     return this._events;
   }
 
-  get isLoading() {
-    return !!this.loading;
+  get isBusy() {
+    return !!this.busy;
   }
 
   get isClientReady() {
@@ -113,11 +115,11 @@ export class ApiClient extends ReplayClient {
   }
 
   _onCommandStart = (...args: any[]) => {
-    this.incLoading();
+    this.incBusy();
   };
 
   _onCommandEnd = (...args: any[]) => {
-    this.decLoading();
+    this.decBusy();
   };
 
   close() {
@@ -126,33 +128,33 @@ export class ApiClient extends ReplayClient {
      * That is a design flaw we probably won't be able to remedy any time soon.
      */
     if (this.socket !== gCurrentSocket) {
-      console.warn(`ApiClient.close called but socket has changed.`);
+      console.warn(`ApiClient.close was called but socket has changed.`);
     }
     this.socket?.close();
     gCurrentSocket = null;
-    this.resetLoading();
+    this.resetBusy();
     sendCommandEvents.removeListener("commandStart", this._onCommandStart);
     sendCommandEvents.removeListener("commandEnd", this._onCommandEnd);
   }
 
-  private resetLoading() {
-    if (this.loading) {
-      this.loading = 0;
-      this._events.emit("loadingStateUpdate", false, this);
+  private resetBusy() {
+    if (this.busy) {
+      this.busy = 0;
+      this._events.emit("busyStateUpdate", false, this);
     }
   }
 
-  private incLoading() {
-    if (!this.loading) {
-      this._events.emit("loadingStateUpdate", true, this);
+  private incBusy() {
+    if (!this.busy) {
+      this._events.emit("busyStateUpdate", true, this);
     }
-    ++this.loading;
+    ++this.busy;
   }
 
-  private decLoading() {
-    --this.loading;
-    if (!this.loading) {
-      this._events.emit("loadingStateUpdate", false, this);
+  private decBusy() {
+    --this.busy;
+    if (!this.busy) {
+      this._events.emit("busyStateUpdate", false, this);
     }
   }
 
@@ -171,11 +173,11 @@ export class ApiClient extends ReplayClient {
       console.warn(`ApiClient.initialize: socket not found.`);
     }
     this.socket = gCurrentSocket;
-    this.resetLoading();
+    this.resetBusy();
     try {
       return await promise;
     } finally {
-      this.decLoading();
+      this.decBusy();
     }
   }
 
