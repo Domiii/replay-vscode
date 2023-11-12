@@ -4,7 +4,7 @@ import { Readable } from "stream";
 import { spawnAsync } from "./code-util/spawn";
 import { confirm, showInformationMessage } from "./code-util/codeModals";
 import { RecordingViewNode, getRecordingLabel } from "./views/RecordingsView";
-import { localRecordingsTracker } from "./recordings/LocalRecordingsTracker";
+import { localRecordingsTracker } from "./replay-recordings/LocalRecordingsTracker";
 
 export function initCommands() {
   /** ###########################################################################
