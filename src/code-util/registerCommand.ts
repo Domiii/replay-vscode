@@ -17,7 +17,7 @@ export function registerCommand(commandName: string, func: (...args: any[]) => a
         return await f(...args);
       }
       catch (err) {
-        logException(err, `'${commandName}' failed -`);
+        logException(err, commandName);
         // throw err;
         return null;
       }

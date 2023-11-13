@@ -29,9 +29,10 @@ export function initCommands() {
   registerCommand("replay.updateBrowsers", async () => {
     await spawnAsync({
       command: "replay",
-      args: ["update-browsers"],
+      args: ["update-browsers", "chromium"],
       title: "Updating Replay",
       successMessage: "Replay has been updated!",
+      cancellable: true,
       options: makeDefaultReplayCliSpawnOptions(),
     });
   });
@@ -41,7 +42,8 @@ export function initCommands() {
       await spawnAsync({
         command: "replay",
         args: ["launch", "http://localhost:3456"],
-        title: "Start new recording in Replay",
+        title: "Recording...",
+        cancellable: true,
         options: makeDefaultReplayCliSpawnOptions(),
       });
     } finally {

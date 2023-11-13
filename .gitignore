@@ -5,6 +5,9 @@ node_modules
 *.vsix
 .yalc
 
+# We use a local-install version of yalc instead, for now.
+yalc.lock
+
 # Yarn
 # see https://github.com/yarnpkg/berry/issues/454#issuecomment-1411548086
 .pnp.*
@@ -14,3 +17,6 @@ node_modules
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# secret
+.secret

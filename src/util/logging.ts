@@ -182,6 +182,9 @@ const reportedExceptions = new WeakSet<any>();
 
 export function logException(err: unknown, ns: string, ...args: any[]) {
   if (isPlainObject(err)) {
+    console.warn(`bad call to logException did not provide an Error object as first argument:`, err, ns, ...args);
+  }
+  else {
     if (reportedExceptions.has(err)) {
       logWarn(ns, ...args, `(repeated error: ${
         /* @ts-ignore */
@@ -191,10 +194,7 @@ export function logException(err: unknown, ns: string, ...args: any[]) {
     }
     reportedExceptions.add(err);
   }
-  else {
-    console.warn(`bad call to logException did not provide an Error object as first argument:`, err, ns, ...args);
-  }
-  logError(ns, ...args, err);
+  logError(ns, ...args, err instanceof Error ? err2String(err) : err);
 }
 
 function logTrace(ns: string, ...args: any[]) {

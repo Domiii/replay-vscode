@@ -1,4 +1,4 @@
-import { STATUS_NOT_FOUND, STATUS_RESOLVED, isPromiseLike } from "suspense";
+import { STATUS_NOT_FOUND, STATUS_PENDING, STATUS_RESOLVED, isPromiseLike } from "suspense";
 import { sourceHitCountsCache } from "replay-next/src/suspense/SourceHitCountsCache";
 import { replayLiveSyncManager } from "../ReplayLiveSyncManager";
 import { LineHitCounts } from "shared/client/types";
@@ -47,13 +47,18 @@ export default class SourceTracker {
   //   }
   //   return this.readHitCounts(startLine, endLine, false) as [number, LineHitCounts][] | null;
   // }
+
+  isPending(line: number) {
+    const status = this.getStatus(line, line);
+    return status == STATUS_PENDING;
+  }
+
   getHitCount(line: number) {
-    // TODO: Also provide a way to determine if the hit count is still PENDING.
     return this.hitCountsByLine.get(line)?.count;
   }
 
-  private readHitCounts(startLine: number, endLine: number, doRead: boolean) {
-    const status = sourceHitCountsCache.getStatus(
+  getStatus(startLine: number, endLine: number) {
+    return sourceHitCountsCache.getStatus(
       startLine,
       endLine,
       replayLiveSyncManager.client!,
@@ -61,6 +66,10 @@ export default class SourceTracker {
       null
       // focusRange ? toPointRange(focusRange) : null
     );
+  }
+
+  private readHitCounts(startLine: number, endLine: number, doRead: boolean) {
+    const status = this.getStatus(startLine, endLine);
 
     if ((doRead && status == STATUS_NOT_FOUND) || status == STATUS_RESOLVED) {
       const result = sourceHitCountsCache.readAsync(
@@ -71,8 +80,11 @@ export default class SourceTracker {
         null
         // focusRange ? toPointRange(focusRange) : null
       ) || null;
+
       if (isPromiseLike(result)) {
         (result).then((entries) => {
+          // Store result separately, because there is a bug where 
+          // we never get the data back otherwise.
           for (const [line, hitCount] of entries) {
             this.hitCountsByLine.set(line, hitCount);
           }

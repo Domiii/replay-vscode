@@ -241,15 +241,6 @@ export default class BaseTreeViewNodeProvider<
    * @virtual
    */
   async handleClick(node: N) {
-    const { treeViewName } = this;
-    const action = ''; // not a button click
-    const nodeId = node.id;
-    const args = {
-      description: node.description,
-      clazz: node.constructor.name
-    };
-
-
     try {
       await node.handleClick?.();
     }
@@ -374,8 +365,6 @@ export default class BaseTreeViewNodeProvider<
        */
       node.id = id;
     }
-
-    // TODO: keep track of all node ids, since VSCode shows an error to the user if we don't do it right (and does not allow us to even log it)
 
     // iconPath
     node.iconPath = this.makeNodeIconPath(node);

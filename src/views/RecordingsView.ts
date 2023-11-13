@@ -42,9 +42,9 @@ class RecordingsView extends BaseTreeViewNodeProvider<RecordingViewNode> {
 const StatusIcons = {
   onDisk: "💾",
   crashed: "💥💾",
+  startedWrite: "⌛💾",
   unknown: "❓",
   uploaded: "✅",
-  startedWrite: "⌛",
   startedUpload: "❌",
   crashUploaded: "💥✔",
   unusable: "❓",
@@ -87,7 +87,7 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
   static makeProperties(recording: RecordingEntry) {
     return {
       description: `${recording.createTime?.toLocaleDateString()} ${recording.createTime?.toLocaleTimeString()}`,
-      tooltip: recording.id,
+      tooltip: JSON.stringify(recording, null, 2),
     };
   }
 
@@ -127,9 +127,12 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
         case "crashed":
         case "onDisk":
         case "startedWrite":
-          await confirm(
+          if (!await confirm(
             `Upload the ${status === "crashed" ? "crash report" : "recording"}?`
-          );
+          )) {
+            return;
+          }
+
           try {
             await spawnAsync({
               command: "replay",

@@ -6,16 +6,30 @@ import {
   TextEditorDecorationType,
   window,
 } from "vscode";
-import { getThemeResourcePath } from "../../code-util/codePaths";
+import { getResourcePath, getThemeResourcePath } from "../../code-util/codePaths";
 import codeDecorationRegistry, {
   DecoTypeRegistry,
   DecorationEntry,
 } from "../CodeDecorationRegistry";
 import SourceTracker from "../../replay-api/sources/SourceTiles";
-import { replayLineToVSCodeLine, vscodeLineToReplayLine } from "../../code-util/rangeUtil";
+import {
+  replayLineToVSCodeLine,
+  vscodeLineToReplayLine,
+} from "../../code-util/rangeUtil";
 import { editorSourceManager } from "./EditorSourceManager";
 
-export function makeHitCountDeco(x: any) {
+function makePendingHitCountDeco() {
+  return window.createTextEditorDecorationType({
+    gutterIconPath: getResourcePath("pending.svg"),
+    gutterIconSize: "100%",
+  });
+}
+
+function makeHitCountDeco(x: any) {
+  if (x == "?") {
+    return makePendingHitCountDeco();
+  }
+  // TODO: Handle all numbers
   return window.createTextEditorDecorationType({
     // borderWidth: '1px',
     // borderStyle: 'solid',
@@ -23,7 +37,7 @@ export function makeHitCountDeco(x: any) {
     // overviewRulerColor: 'blue',
     // overviewRulerLane: OverviewRulerLane.Right,
     // gutterIconPath: getResourcePath('replay-logo.png'),
-    gutterIconPath: getThemeResourcePath("num", x + ".svg"),
+    gutterIconPath: getResourcePath("num", x + ".svg"),
     gutterIconSize: "100%",
     // after: {
     //   contentText: x + "",
@@ -50,21 +64,33 @@ export function updateDecorations(
   maxLine: number
 ) {
   const allDecos = new Map<TextEditorDecorationType, DecorationOptions[]>();
-  
-  for (const range of editorSourceManager.getVisibleAndBreakableRanges(editor, maxLine)) {
-    // TODO: show load indicators
-    for (let replayLine = range.start; replayLine <= range.end; ++replayLine) {
-      const count = sourceTracker.getHitCount(replayLine);
-      const editorLine = replayLineToVSCodeLine(replayLine);
-      const decoEntry = {
-        range: new Range(new Position(editorLine, 1), new Position(editorLine, 1)),
-        hoverMessage: "hi!",
-      } as DecorationOptions;
 
-      const type = hitCountDecoRegistry.getOrCreate(count);
-      let decos = allDecos.get(type);
+  for (const range of editorSourceManager.getVisibleAndBreakableRanges(
+    editor,
+    maxLine
+  )) {
+    for (let replayLine = range.start; replayLine <= range.end; ++replayLine) {
+      const editorLine = replayLineToVSCodeLine(replayLine);
+      const pending = sourceTracker.isPending(replayLine);
+      let count: any;
+      let decoType: TextEditorDecorationType;
+      if (pending) {
+        count = "?";
+      } else {
+        count = sourceTracker.getHitCount(replayLine);
+      }
+      decoType = hitCountDecoRegistry.getOrCreate(count);
+      const decoEntry = {
+        range: new Range(
+          new Position(editorLine, 1),
+          new Position(editorLine, 1)
+        ),
+        hoverMessage: count + "",
+      };
+
+      let decos = allDecos.get(decoType);
       if (!decos) {
-        allDecos.set(type, (decos = []));
+        allDecos.set(decoType, (decos = []));
       }
       decos.push(decoEntry);
     }

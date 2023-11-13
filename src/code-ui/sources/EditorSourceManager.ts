@@ -35,12 +35,6 @@ function pickPreferredColumn(column?: ViewColumn) {
 
 export default class EditorSourceManager {
   init() {
-    // TODO: Track TextEditor callback subscriptions.
-    // TODO: Remove decorations from TextEditors that had sources but don't anymore.
-    // TODO: Subscribe to TextEditor visibility updates.
-    // TODO: Subscribe to TextEditor line visibility updates.
-    // TODO: Subscribe to hitCount updates.
-
     // Get source data.
     // We can assume that for one recording, this will only ever produce one
     // array of sources.
@@ -93,6 +87,11 @@ export default class EditorSourceManager {
   async handleNewEditor(source: Source, textEditor: TextEditor) {
     const focusRange = null;
 
+    // TODO: Track TextEditor callback subscriptions.
+    // TODO: Remove decorations from TextEditors that had sources but don't anymore.
+    // TODO: Subscribe to TextEditor visibility updates.
+    // TODO: Subscribe to TextEditor line visibility updates.
+    // TODO: Subscribe to hitCount updates.
     // TODO: track the trackers
     // TODO: handle unsubscribe callback
     //    -> unsubscribe with tracker
@@ -109,7 +108,6 @@ export default class EditorSourceManager {
 
     const unsubscribe = sourceHitCountsCache.subscribe(
       async (e) => {
-        log(`sourceHits`, e);
         try {
           // Hackfix: Our promise handlers are registered after their promise handlers, so we'll give it an extra tick to come around.
           await 0;
@@ -127,6 +125,9 @@ export default class EditorSourceManager {
     for (const range of this.getVisibleAndBreakableRanges(textEditor, maxLine)) {
       sourceTracker.readHitCountsTiled(range.start, range.end);
     }
+
+    // update initially
+    updateEditorSourceDecorations(sourceTracker, textEditor, maxLine);
   }
 
   getEditorBySourceUrl(url: string): TextEditor | null {
