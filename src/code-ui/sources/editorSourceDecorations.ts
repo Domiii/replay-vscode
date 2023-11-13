@@ -9,14 +9,11 @@ import {
 import { getResourcePath, getThemeResourcePath } from "../../code-util/codePaths";
 import codeDecorationRegistry, {
   DecoTypeRegistry,
-  DecorationEntry,
 } from "../CodeDecorationRegistry";
-import SourceTracker from "../../replay-api/sources/SourceTiles";
 import {
   replayLineToVSCodeLine,
-  vscodeLineToReplayLine,
 } from "../../code-util/rangeUtil";
-import { editorSourceManager } from "./EditorSourceManager";
+import EditorSource from "./EditorSource";
 
 function makePendingHitCountDeco() {
   return window.createTextEditorDecorationType({
@@ -58,26 +55,33 @@ function makeHitCountDeco(x: any) {
 
 const hitCountDecoRegistry = new DecoTypeRegistry(makeHitCountDeco);
 
-export function updateDecorations(
-  sourceTracker: SourceTracker,
-  editor: TextEditor,
+export function updateSourceDecorations(
+  editorSource: EditorSource,
   maxLine: number
 ) {
-  const allDecos = new Map<TextEditorDecorationType, DecorationOptions[]>();
+  const editor = editorSource.getEditor();
+  if (!editor) {
+    // TODO: Check if we need to 
+    return;
+  }
 
-  for (const range of editorSourceManager.getVisibleAndBreakableRanges(
-    editor,
+  const allDecos = new Map<TextEditorDecorationType, DecorationOptions[]>();
+  const editorRegistry =
+    codeDecorationRegistry.getOrCreateEditorRegistry(editor);
+  editorRegistry.clear();
+
+  for (const range of editorSource.getVisibleAndBreakableRanges(
     maxLine
   )) {
     for (let replayLine = range.start; replayLine <= range.end; ++replayLine) {
       const editorLine = replayLineToVSCodeLine(replayLine);
-      const pending = sourceTracker.isPending(replayLine);
+      const pending = editorSource.isPending(replayLine);
       let count: any;
       let decoType: TextEditorDecorationType;
       if (pending) {
         count = "?";
       } else {
-        count = sourceTracker.getHitCount(replayLine);
+        count = editorSource.getHitCount(replayLine);
       }
       decoType = hitCountDecoRegistry.getOrCreate(count);
       const decoEntry = {
@@ -95,10 +99,6 @@ export function updateDecorations(
       decos.push(decoEntry);
     }
   }
-
-  const editorRegistry =
-    codeDecorationRegistry.getOrCreateEditorRegistry(editor);
-  editorRegistry.clear();
 
   for (const [type, decos] of allDecos) {
     editorRegistry.getOrCreateDecos(type).setDecos(decos);

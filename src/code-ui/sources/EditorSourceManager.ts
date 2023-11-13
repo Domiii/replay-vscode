@@ -1,16 +1,9 @@
 import { TextEditor, ViewColumn, window, workspace } from "vscode";
-import maxBy from "lodash/maxBy";
-import { breakpointPositionsCache } from "replay-next/src/suspense/BreakpointPositionsCache";
 import { Source, sourcesCache } from "replay-next/src/suspense/SourcesCache";
-import { sourceHitCountsCache } from "replay-next/src/suspense/SourceHitCountsCache";
-import {
-  pathNormalized,
-} from "../../code-util/codePaths";
+import { pathNormalized } from "../../code-util/codePaths";
 import { newLogger } from "../../util/logging";
 import { replayLiveSyncManager } from "../../replay-api/ReplayLiveSyncManager";
-import SourceTracker from "../../replay-api/sources/SourceTiles";
-import { updateDecorations as updateEditorSourceDecorations } from "./editorSourceDecorations";
-import { vscodeLineToReplayLine } from "../../code-util/rangeUtil";
+import EditorSource from "./EditorSource";
 
 const {
   log,
@@ -20,18 +13,18 @@ const {
   exception: logException,
 } = newLogger("EditorSourceManager");
 
-function pickPreferredColumn(column?: ViewColumn) {
-  if (!column) {
-    const openFile = window.activeTextEditor?.document?.fileName;
-    // Use naive heuristic: if active file is JS or TS file: Choose active column.
-    if (openFile?.endsWith(".js") || openFile?.endsWith(".ts")) {
-      column = window.activeTextEditor!.viewColumn || ViewColumn.One;
-    } else {
-      column = ViewColumn.One;
-    }
-  }
-  return column;
-}
+// function pickPreferredColumn(column?: ViewColumn) {
+//   if (!column) {
+//     const openFile = window.activeTextEditor?.document?.fileName;
+//     // Use naive heuristic: if active file is JS or TS file: Choose active column.
+//     if (openFile?.endsWith(".js") || openFile?.endsWith(".ts")) {
+//       column = window.activeTextEditor!.viewColumn || ViewColumn.One;
+//     } else {
+//       column = ViewColumn.One;
+//     }
+//   }
+//   return column;
+// }
 
 export default class EditorSourceManager {
   init() {
@@ -52,82 +45,27 @@ export default class EditorSourceManager {
   }
 
   async handleNewSources(sources: Source[]) {
-    for (const source of sources) {
-      if (source.url && !source.url.startsWith("record-replay")) {
-        const textEditor = this.getEditorBySourceUrl(source.url);
-        if (textEditor) {
-          this.handleNewEditor(source, textEditor);
-        }
-      }
-    }
-  }
-
-  async getMaxLine(sourceId: string) {
-    const status = breakpointPositionsCache.getStatus(replayLiveSyncManager.client!, sourceId);
-    const result = await breakpointPositionsCache.readAsync(replayLiveSyncManager.client!, sourceId);
-    return maxBy(result[0], loc => loc.line)?.line;
-  }
-
-  /**
-   * NOTE: We need this because either the caches or the protocol are VERY
-   * finicky. Things will not resolve, if the requested range is outside
-   * of the breakable range.
-   */
-  getVisibleAndBreakableRanges(textEditor: TextEditor, maxLine: number) {
-    return textEditor.visibleRanges.map(range => {
-      const start = vscodeLineToReplayLine(range.start.line);
-      const end = vscodeLineToReplayLine(range.end.line);
-      if (start > maxLine) {
-        return null;
-      }
-      return { start, end: Math.min(end, maxLine) };
-    }).filter(Boolean) as { start: number, end: number }[];
-  }
-
-  async handleNewEditor(source: Source, textEditor: TextEditor) {
-    const focusRange = null;
-
-    // TODO: Track TextEditor callback subscriptions.
-    // TODO: Remove decorations from TextEditors that had sources but don't anymore.
-    // TODO: Subscribe to TextEditor visibility updates.
-    // TODO: Subscribe to TextEditor line visibility updates.
-    // TODO: Subscribe to hitCount updates.
-    // TODO: track the trackers
-    // TODO: handle unsubscribe callback
-    //    -> unsubscribe with tracker
-    //    -> add as disposable to context
-    // TODO: track SyncManager status
-    
-    const sourceTracker = new SourceTracker(source.sourceId);
-
-    // TODO: move maxLine logic to sourceTracker
-    const maxLine = await this.getMaxLine(source.sourceId);
-    if (!maxLine) {
-      return;
-    }
-
-    const unsubscribe = sourceHitCountsCache.subscribe(
-      async (e) => {
+    await Promise.all(
+      sources.map(async (source) => {
         try {
-          // Hackfix: Our promise handlers are registered after their promise handlers, so we'll give it an extra tick to come around.
-          await 0;
-          updateEditorSourceDecorations(sourceTracker, textEditor, maxLine);
+          if (source.url && !source.url.startsWith("record-replay")) {
+            const textEditor = this.getEditorBySourceUrl(source.url);
+            if (textEditor) {
+              const editorSource = new EditorSource(
+                source,
+                textEditor.document.fileName
+              );
+              await editorSource.init();
+            }
+          }
         } catch (err) {
-          logException(err, "sourceHitCountsCache.subscribe failed");
+          logException(
+            err,
+            `handleNewSource failed for source at "${source.url}"`
+          );
         }
-      },
-      1,
-      maxLine,
-      replayLiveSyncManager.client!,
-      source.sourceId,
-      focusRange
+      })
     );
-    for (const range of this.getVisibleAndBreakableRanges(textEditor, maxLine)) {
-      sourceTracker.readHitCountsTiled(range.start, range.end);
-    }
-
-    // update initially
-    updateEditorSourceDecorations(sourceTracker, textEditor, maxLine);
   }
 
   getEditorBySourceUrl(url: string): TextEditor | null {
@@ -150,6 +88,14 @@ export default class EditorSourceManager {
     //     viewColumn: pickPreferredColumn()
     //   }
     // );
+  }
+
+  getEditorByEditorPath(editorPath: string): TextEditor | null {
+    return (
+      window.visibleTextEditors.find(
+        (textEditor) => textEditor.document.uri.fsPath == editorPath
+      ) || null
+    );
   }
 
   getSource(textEditor: TextEditor) {

@@ -193,14 +193,6 @@ export class ApiClient extends ReplayClient {
     await this.initialize(recordingId, accessToken);
   }
 
-  async runExperiment(recordingId: string = SampleRecordingId) {
-    await this.startSession(recordingId);
-    console.log("Running experiment...");
-    const expr = "3 * 4";
-    const result = await this.justEval(SamplePoint, expr);
-    console.log(`runExperiment result =`, result);
-  }
-
   async eval(point: string, expression: string, frameId: string | null = null) {
     await this.waitForSession();
 
