@@ -8,7 +8,7 @@ import maxBy from "lodash/maxBy";
 import { Source } from "replay-next/src/suspense/SourcesCache";
 import { sourceHitCountsCache } from "replay-next/src/suspense/SourceHitCountsCache";
 import { breakpointPositionsCache } from "replay-next/src/suspense/BreakpointPositionsCache";
-import { replayLiveSyncManager } from "../ReplayLiveSyncManager";
+import { replaySessionManager } from "../../ReplaySessionManager";
 import { LineHitCounts } from "shared/client/types";
 
 export const SourceTileSize = 4; // 100;
@@ -51,7 +51,7 @@ export default class SourceData {
   async getOrFetchMaxLine(): Promise<ReplayLine | null> {
     const { sourceId } = this;
     const result = await breakpointPositionsCache.readAsync(
-      replayLiveSyncManager.client!,
+      replaySessionManager.client!,
       sourceId
     );
     return maxBy(result[0], (loc) => loc.line)?.line || null;
@@ -95,7 +95,7 @@ export default class SourceData {
     return sourceHitCountsCache.getStatus(
       startLine,
       endLine,
-      replayLiveSyncManager.client!,
+      replaySessionManager.client!,
       this.sourceId,
       null
       // focusRange ? toPointRange(focusRange) : null
@@ -110,7 +110,7 @@ export default class SourceData {
         sourceHitCountsCache.readAsync(
           startLine,
           endLine,
-          replayLiveSyncManager.client!,
+          replaySessionManager.client!,
           this.sourceId,
           null
           // focusRange ? toPointRange(focusRange) : null

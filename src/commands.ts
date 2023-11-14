@@ -5,7 +5,7 @@ import { spawnAsync } from "./code-util/spawn";
 import { confirm, showInformationMessage } from "./code-util/codeModals";
 import { RecordingViewNode, getRecordingLabel } from "./views/RecordingsView";
 import { localRecordingsTracker } from "./replay-recordings/LocalRecordingsTracker";
-import { replayLiveSyncManager } from "./replay-api/ReplayLiveSyncManager";
+import { replaySessionManager } from "./ReplaySessionManager";
 
 function makeDefaultReplayCliSpawnOptions() {
   return undefined;
@@ -82,11 +82,11 @@ export function initCommands() {
   registerCommand(
     "replay.toggleRecordingLiveSync",
     async (node: RecordingViewNode) => {
-      await replayLiveSyncManager.toggleSync(node.entry);
+      await replaySessionManager.toggleSession(node.entry);
     }
   );
 
   registerCommand("replay.toggleRecordingLiveSyncActive", async () => {
-    await replayLiveSyncManager.stopSync();
+    await replaySessionManager.stopSession();
   });
 }

@@ -4,6 +4,7 @@ import { ReplayClient } from "shared/client/ReplayClient";
 import { WebSocket } from "ws";
 import { EventEmitter } from "tseep";
 import { newLogger } from "../util/logging";
+import { UnsubscribeCallback } from "suspense";
 
 const DispatchAddress = "wss://dispatch.replay.io";
 
@@ -94,6 +95,8 @@ export class ApiClient extends ReplayClient {
     busyStateUpdate: (loading: boolean, client: ApiClient) => void;
   }>();
 
+  private unsubscribeCallbacks: UnsubscribeCallback[] = [];
+
   constructor() {
     super(DispatchAddress);
     initHackfixes();
@@ -144,14 +147,14 @@ export class ApiClient extends ReplayClient {
     }
   }
 
-  private incBusy() {
+  incBusy() {
     if (!this.busy) {
       this._events.emit("busyStateUpdate", true, this);
     }
     ++this.busy;
   }
 
-  private decBusy() {
+  decBusy() {
     --this.busy;
     if (!this.busy) {
       this._events.emit("busyStateUpdate", false, this);
@@ -216,5 +219,10 @@ export class ApiClient extends ReplayClient {
       console.error(`eval failed: ${JSON.stringify(result)}`);
       return "(eval failed)";
     }
+  }
+
+  // Callback management
+  addCallback(cb: UnsubscribeCallback) {
+
   }
 }

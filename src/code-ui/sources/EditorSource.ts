@@ -7,7 +7,7 @@ import EmptyArray from "../../util/EmptyArray";
 import { vscodeLineToReplayLine } from "../../code-util/rangeUtil";
 import { updateSourceDecorations } from "./editorSourceDecorations";
 import { Logger, newLogger } from "../../util/logging";
-import { replayLiveSyncManager } from "../../replay-api/ReplayLiveSyncManager";
+import { replaySessionManager } from "../../ReplaySessionManager";
 
 export type VSCodeLine = number;
 
@@ -40,8 +40,6 @@ export default class EditorSource extends SourceData {
     //    -> onDidChangeVisibleTextEditors
     //    -> onDidChangeTextEditorVisibleRanges
 
-    // TODO: Subscribe to hitCount updates.
-    // TODO: track the trackers
     // TODO: handle unsubscribe callback
     //    -> unsubscribe with tracker
     //    -> add as disposable to context
@@ -65,7 +63,7 @@ export default class EditorSource extends SourceData {
       },
       1,
       maxLine,
-      replayLiveSyncManager.client!,
+      replaySessionManager.client!,
       this.sourceId,
       focusRange
     );

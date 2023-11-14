@@ -6,7 +6,7 @@ import { localRecordingsTracker } from "../replay-recordings/LocalRecordingsTrac
 import { openUrl } from "../util/system";
 import { confirm, showWarningMessage } from "../code-util/codeModals";
 import { spawnAsync } from "../code-util/spawn";
-import { replayLiveSyncManager } from "../replay-api/ReplayLiveSyncManager";
+import { replaySessionManager } from "../ReplaySessionManager";
 
 /** ###########################################################################
  * {@link RecordingsView}
@@ -20,8 +20,8 @@ class RecordingsView extends BaseTreeViewNodeProvider<RecordingViewNode> {
   initOnActivate() {
     // Register event handlers.
     localRecordingsTracker.recordings.events.on("update", this.refresh);
-    replayLiveSyncManager.events.on("startSync", this.refresh);
-    replayLiveSyncManager.events.on("stopSync", this.refresh);
+    replaySessionManager.events.on("startSync", this.refresh);
+    replaySessionManager.events.on("stopSync", this.refresh);
 
     // Start rendering.
     this.refresh();
@@ -78,7 +78,7 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
   static makeLabel(recording: RecordingEntry) {
     const uri = getRecordingLabel(recording);
     let icon = StatusIcons[recording.status] || "";
-    if (replayLiveSyncManager.syncId == recording.id) {
+    if (replaySessionManager.syncId == recording.id) {
       icon = "🔴";
     }
     return `${icon} ${uri}`;
@@ -92,7 +92,7 @@ export class RecordingViewNode extends BaseTreeViewNode<RecordingEntry> {
   }
 
   get isSyncing() {
-    return replayLiveSyncManager.syncId == this.entry.id;
+    return replaySessionManager.syncId == this.entry.id;
   }
 
   get fullStatus() {

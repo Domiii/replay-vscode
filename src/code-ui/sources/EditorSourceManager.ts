@@ -1,9 +1,11 @@
 import { TextEditor, ViewColumn, window, workspace } from "vscode";
 import { Source, sourcesCache } from "replay-next/src/suspense/SourcesCache";
+import { sourceHitCountsCache } from "replay-next/src/suspense/SourceHitCountsCache";
 import { pathNormalized } from "../../code-util/codePaths";
 import { newLogger } from "../../util/logging";
-import { replayLiveSyncManager } from "../../replay-api/ReplayLiveSyncManager";
+import { replaySessionManager } from "../../ReplaySessionManager";
 import EditorSource from "./EditorSource";
+import { updateVisibleDecorationsPending } from "./editorSourceDecorations";
 
 const {
   log,
@@ -27,6 +29,11 @@ const {
 // }
 
 export default class EditorSourceManager {
+  editorSources: EditorSource[] = [];
+
+  /**
+   * Note: This will only ever be called once.
+   */
   init() {
     // Get source data.
     // We can assume that for one recording, this will only ever produce one
@@ -41,9 +48,35 @@ export default class EditorSourceManager {
       } catch (err) {
         logException(err, "sourcesCache.subscribe failed");
       }
-    }, replayLiveSyncManager.client!);
+    }, replaySessionManager.client!);
+  }
+  
+  async beforeStartSync() {
+    // Reset all caches that we used.
+    // TODO: hook into all caches and evict them automatically,
+    // without having to list them here.
+    sourcesCache.evictAll();
+    sourceHitCountsCache.evictAll();
+
+    // Debug settings.
+    sourceHitCountsCache.enableDebugLogging();
+
+    // Show all source lines as pending.
+    updateVisibleDecorationsPending();
   }
 
+  async startSync() {
+    try {
+      // Start fetching sources.
+      await sourcesCache.readAsync(replaySessionManager.client!);
+    } catch (err: unknown) {
+      logException(err, "failed to start:");
+    }
+  }
+
+  /**
+   * Note: The returned promise of this function is going to be left dangling.
+   */
   async handleNewSources(sources: Source[]) {
     await Promise.all(
       sources.map(async (source) => {
@@ -55,6 +88,7 @@ export default class EditorSourceManager {
                 source,
                 textEditor.document.fileName
               );
+              this.editorSources.push(editorSource);
               await editorSource.init();
             }
           }
