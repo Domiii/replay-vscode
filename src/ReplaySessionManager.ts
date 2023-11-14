@@ -75,6 +75,7 @@ export default class ReplaySessionManager {
   async stopSession() {
     if (this.client) {
       console.debug(`ReplaySessionManager.stopSync ${this.recording?.id}`);
+      await editorSourceManager.stopSync();
       commands.executeCommand("setContext", "replay.context.liveSyncId", null);
       this._events.emit("stopSync", this);
       this.client.close();

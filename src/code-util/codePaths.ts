@@ -1,7 +1,7 @@
 import fs, { EncodingOption } from 'fs';
 import path from 'path';
 import { ColorThemeKind, window } from 'vscode';
-import currentContext from './currentContext';
+import currentContext from './currentExtensionContext';
 
 export function realPathSyncNormalized(fpath: string, options?: EncodingOption) {
   return pathNormalized(fs.realpathSync(fpath, options));

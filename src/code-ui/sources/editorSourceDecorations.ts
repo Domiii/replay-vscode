@@ -72,7 +72,7 @@ const hitCountDecoRegistry = new DecoTypeRegistry(getOrCreateHitCountDeco);
 /**
  * Show a pending state in all visible editors.
  */
-export function updateVisibleDecorationsPending() {
+export function setAllDecorationsPending() {
   clearAllDecorations();
   for (const editor of window.visibleTextEditors) {
     const editorRegistry =
@@ -92,12 +92,25 @@ export function updateVisibleDecorationsPending() {
   }
 }
 
+export function clearDecorationsForAllEditorsExcept(textEditors: TextEditor[]) {
+  const set = new Set(textEditors);
+  for (const editor of window.visibleTextEditors) {
+    if (!set.has(editor)) {
+      clearDecorations(editor);
+    }
+  }
+}
+
 export function clearAllDecorations() {
   for (const editor of window.visibleTextEditors) {
-    const editorRegistry =
-      codeDecorationRegistry.getOrCreateEditorRegistry(editor);
-    editorRegistry.clear();
+    clearDecorations(editor);
   }
+}
+
+export function clearDecorations(editor: TextEditor) {
+  const editorRegistry =
+    codeDecorationRegistry.getOrCreateEditorRegistry(editor);
+  editorRegistry.clear();
 }
 
 export function updateSourceDecorations(
@@ -126,20 +139,22 @@ export function updateSourceDecorations(
       } else {
         count = editorSource.getHitCount(replayLine);
       }
-      decoType = hitCountDecoRegistry.getOrCreate(count);
-      const decoEntry = {
-        range: new Range(
-          new Position(editorLine, 1),
-          new Position(editorLine, 1)
-        ),
-        hoverMessage: count + "",
-      };
+      if (count) {
+        decoType = hitCountDecoRegistry.getOrCreate(count);
+        const decoEntry = {
+          range: new Range(
+            new Position(editorLine, 1),
+            new Position(editorLine, 1)
+          ),
+          hoverMessage: count + "",
+        };
 
-      let decos = allDecos.get(decoType);
-      if (!decos) {
-        allDecos.set(decoType, (decos = []));
+        let decos = allDecos.get(decoType);
+        if (!decos) {
+          allDecos.set(decoType, (decos = []));
+        }
+        decos.push(decoEntry);
       }
-      decos.push(decoEntry);
     }
   }
 

@@ -1,8 +1,8 @@
 import {
   commands
 } from 'vscode';
-import currentContext from './currentContext';
 import { newLogger } from '../util/logging';
+import currentExtensionContext from './currentExtensionContext';
 
 // eslint-disable-next-line no-unused-vars
 const { log, debug, warn, error: logError, exception: logException } = newLogger('Command');
@@ -27,7 +27,7 @@ export function registerCommand(commandName: string, func: (...args: any[]) => a
   const result = commands.registerCommand(commandName, _errWrap(func));
   
   // clear on deactivate
-  currentContext().subscriptions.push(result);
+  currentExtensionContext().subscriptions.push(result);
 
   return result;
 }

@@ -41,7 +41,7 @@ export function initCommands() {
     try {
       await spawnAsync({
         command: "replay",
-        args: ["launch", "http://localhost:3456"],
+        args: ["launch", "http://localhost:4567/todo"],
         title: "Recording...",
         cancellable: true,
         options: makeDefaultReplayCliSpawnOptions(),

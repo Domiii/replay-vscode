@@ -2,7 +2,7 @@
 import "./bootstrap";
 
 import * as vscode from 'vscode';
-import { initCurrentContext } from "./code-util/currentContext";
+import { initCurrentContext } from "./code-util/currentExtensionContext";
 import { initRecordingsView } from "./views/RecordingsView";
 import { initCommands } from "./commands";
 import { initLogging } from "./code-util/logging";

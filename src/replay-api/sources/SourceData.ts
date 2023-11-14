@@ -8,6 +8,8 @@ import maxBy from "lodash/maxBy";
 import { Source } from "replay-next/src/suspense/SourcesCache";
 import { sourceHitCountsCache } from "replay-next/src/suspense/SourceHitCountsCache";
 import { breakpointPositionsCache } from "replay-next/src/suspense/BreakpointPositionsCache";
+/* @ts-ignore */
+import SyncPromise from "@dbux/common/src/util/SyncPromise";
 import { replaySessionManager } from "../../ReplaySessionManager";
 import { LineHitCounts } from "shared/client/types";
 
@@ -23,6 +25,8 @@ export type ReplayLine = number;
 export default class SourceData {
   source: Source;
   hitCountsByLine = new Map<ReplayLine, LineHitCounts>();
+  readPromise: SyncPromise | null = null;
+  readCount = 0;
 
   constructor(source: Source) {
     this.source = source;
@@ -47,6 +51,10 @@ export default class SourceData {
   /** ###########################################################################
    * Data Queries
    * ##########################################################################*/
+
+  async waitUntilAllPendingReadsFinished() {
+    await this.readPromise?.wait();
+  }
 
   async getOrFetchMaxLine(): Promise<ReplayLine | null> {
     const { sourceId } = this;
@@ -103,6 +111,11 @@ export default class SourceData {
   }
 
   private readHitCounts(startLine: ReplayLine, endLine: ReplayLine, doRead: boolean) {
+    if (!this.readPromise) {
+      console.assert(!this.readCount, "!!this.readPromise == !!this.readCount");
+      this.readPromise = new SyncPromise();
+    }
+    ++this.readCount;
     const status = this.getStatus(startLine, endLine);
 
     if ((doRead && status == STATUS_NOT_FOUND) || status == STATUS_RESOLVED) {
@@ -122,6 +135,12 @@ export default class SourceData {
           // we never get the data back otherwise.
           for (const [line, hitCount] of entries) {
             this.hitCountsByLine.set(line, hitCount);
+          }
+          --this.readCount;
+          if (!this.readCount) {
+            // Finished all pending requests.
+            this.readPromise.resolve();
+            this.readPromise = null;
           }
         });
       }

@@ -1,12 +1,17 @@
 import { TextEditor, ViewColumn, window, workspace } from "vscode";
 import { Source, sourcesCache } from "replay-next/src/suspense/SourcesCache";
 import { sourceHitCountsCache } from "replay-next/src/suspense/SourceHitCountsCache";
-import { pathNormalized } from "../../code-util/codePaths";
+import { pathNormalized, pathRelative } from "../../code-util/codePaths";
 import { newLogger } from "../../util/logging";
 import { replaySessionManager } from "../../ReplaySessionManager";
 import EditorSource from "./EditorSource";
-import { updateVisibleDecorationsPending } from "./editorSourceDecorations";
+import {
+  clearDecorationsForAllEditorsExcept,
+  setAllDecorationsPending,
+} from "./editorSourceDecorations";
 import { UnsubscribeCallback } from "suspense";
+import currentExtensionContext from "../../code-util/currentExtensionContext";
+import { editorManager } from "./EditorManager";
 
 const {
   log,
@@ -31,27 +36,30 @@ const {
 
 export default class EditorSourceManager {
   editorSources: EditorSource[] = [];
+  editorSourcesByEditorPath = new Map<string, EditorSource>();
   unsubscribe?: UnsubscribeCallback;
 
   /**
    * Note: This will only ever be called once.
    */
-  init() {
-  }
-  
-  async beforeStartSync() {
-    // Unsubscribe.
-    this.unsubscribe?.();
+  init() {}
 
+  /** ###########################################################################
+   * Sync Start + Stop
+   * ##########################################################################*/
+
+  async beforeStartSync() {
     // Reset all caches that we used.
     // TODO: hook into all caches and evict them automatically,
     // without having to list them here.
     sourcesCache.evictAll();
     sourceHitCountsCache.evictAll();
 
-    // Debug settings.
+    // Enable debug settings.
     sourceHitCountsCache.enableDebugLogging();
-    
+
+    this.setAllEditorsPending();
+
     // Get source data.
     // We can assume that for one recording, this will only ever produce one
     // array of sources.
@@ -60,18 +68,51 @@ export default class EditorSourceManager {
         const sources = e.value as Source[] | undefined;
         if (sources) {
           // Sources have come in!
-          this.handleNewSources(sources);
+          this.handleSourcesUpdate(sources);
         }
       } catch (err) {
         logException(err, "sourcesCache.subscribe failed");
       }
     }, replaySessionManager.client!);
-
-    // Show all source lines as pending.
-    updateVisibleDecorationsPending();
   }
 
   async startSync() {
+    window.onDidChangeVisibleTextEditors(
+      (editors) => {
+        Promise.all(
+          editors.map(async (editor) => {
+            try {
+              await this.handleEditorVisibilityUpdate(editor);
+            } catch (err) {
+              logException(
+                err,
+                `handleEditorVisibilityUpdate failed during onDidChangeVisibleTextEditors for file "${
+                  editor.document.fileName || ""
+                }"`
+              );
+            }
+          })
+        );
+      },
+      null,
+      currentExtensionContext().subscriptions
+    );
+    window.onDidChangeTextEditorVisibleRanges(
+      async ({ textEditor: editor, visibleRanges }) => {
+        try {
+          await this.handleEditorVisibilityUpdate(editor);
+        } catch (err) {
+          logException(
+            err,
+            `handleEditorVisibilityUpdate failed during onDidChangeVisibleTextEditors for file "${
+              editor.document.fileName || ""
+            }"`
+          );
+        }
+      },
+      null,
+      currentExtensionContext().subscriptions
+    );
     try {
       // Start fetching sources.
       await sourcesCache.readAsync(replaySessionManager.client!);
@@ -80,31 +121,107 @@ export default class EditorSourceManager {
     }
   }
 
+  async stopSync() {
+    // Unsubscribe.
+    this.unsubscribe?.();
+
+    // Clear EditorSources.
+    this.editorSources.forEach((s) => {
+      s.dispose();
+    });
+    this.editorSources.splice(0, this.editorSources.length);
+  }
+
+  /** ###########################################################################
+   * Event Handling.
+   * ##########################################################################*/
+
   /**
+   * New sources have been fetched.
    * Note: The returned promise of this function is going to be left dangling.
    */
-  async handleNewSources(sources: Source[]) {
+  async handleSourcesUpdate(sources: Source[]) {
+    // Init EditorSource objects.
+    for (const source of sources) {
+      if (
+        source.url &&
+        !source.url.startsWith("record-replay") &&
+        !!this.convertSourceUrlToRelativePath(source.url)
+      ) {
+        const editorSource = new EditorSource(source);
+        this.editorSources.push(editorSource);
+        editorSource.init();
+      }
+    }
+
+    // Start fetching hitCounts.
     await Promise.all(
-      sources.map(async (source) => {
+      this.editorSources.flatMap(async (editorSource) => {
         try {
-          if (source.url && !source.url.startsWith("record-replay")) {
-            const textEditor = this.getEditorBySourceUrl(source.url);
-            if (textEditor) {
-              const editorSource = new EditorSource(
-                source,
-                textEditor.document.fileName
-              );
-              this.editorSources.push(editorSource);
-              await editorSource.init();
-            }
+          const textEditor = this.getEditorBySourceUrl(editorSource.url);
+          if (textEditor) {
+            editorSource.updateForEditor(textEditor);
           }
+          await editorSource.waitUntilAllPendingReadsFinished();
         } catch (err) {
           logException(
             err,
-            `handleNewSource failed for source at "${source.url}"`
+            `EditorSource.init failed for source at "${editorSource.relativePath}"`
           );
         }
       })
+    );
+
+    // Initial hitCount fetching has finished.
+    // Remove "pending decorations" from editors that don't have sources.
+    const editorsWithSources = this.getAllEditorsWithSources();
+    clearDecorationsForAllEditorsExcept(editorsWithSources);
+  }
+
+  /**
+   * Editor is now visible and was not before, or its visible ranges changed.
+   */
+  async handleEditorVisibilityUpdate(textEditor: TextEditor) {
+    const editorSource = this.getEditorSourceByEditorPath(
+      textEditor.document.fileName
+    );
+    if (editorSource) {
+      console.assert(
+        editorSource.getEditor() == textEditor,
+        "editorSource.getEditor() == textEditor"
+      );
+      await editorSource.updateForEditor(textEditor);
+      this.editorSourcesByEditorPath.set(
+        textEditor.document.fileName,
+        editorSource
+      );
+    }
+  }
+
+  /**
+   * We call this when starting sync.
+   */
+  private setAllEditorsPending() {
+    // Show all source lines as pending.
+    setAllDecorationsPending();
+  }
+
+  /** ###########################################################################
+   * Look up paths, TextEditors and Sources.
+   * ##########################################################################*/
+
+  getAllEditorsWithSources() {
+    return this.editorSources
+    .flatMap((s) => s.getEditor())
+    .filter(Boolean) as TextEditor[];
+  }
+
+  getEditorSourceByEditorPath(editorPath: string): EditorSource | null {
+    editorPath = pathNormalized(editorPath);
+    return (
+      this.editorSources.find((editorSource) =>
+        editorPath.endsWith(editorSource.relativePath)
+      ) || null
     );
   }
 
@@ -113,29 +230,7 @@ export default class EditorSourceManager {
     if (!relativePath) {
       return null;
     }
-    return this.getEditorByRelativePath(relativePath);
-  }
-
-  getEditorByRelativePath(relativePath: string): TextEditor | null {
-    return (
-      window.visibleTextEditors.find((textEditor) =>
-        pathNormalized(textEditor.document.uri.fsPath).endsWith(relativePath)
-      ) || null
-    );
-    // return window.showTextDocument(
-    //   Uri.file(editorPath),
-    //   {
-    //     viewColumn: pickPreferredColumn()
-    //   }
-    // );
-  }
-
-  getEditorByEditorPath(editorPath: string): TextEditor | null {
-    return (
-      window.visibleTextEditors.find(
-        (textEditor) => textEditor.document.uri.fsPath == editorPath
-      ) || null
-    );
+    return editorManager.getEditorByRelativePath(relativePath);
   }
 
   getSource(textEditor: TextEditor) {
