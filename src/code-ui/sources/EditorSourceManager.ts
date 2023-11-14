@@ -6,6 +6,7 @@ import { newLogger } from "../../util/logging";
 import { replaySessionManager } from "../../ReplaySessionManager";
 import EditorSource from "./EditorSource";
 import { updateVisibleDecorationsPending } from "./editorSourceDecorations";
+import { UnsubscribeCallback } from "suspense";
 
 const {
   log,
@@ -30,15 +31,31 @@ const {
 
 export default class EditorSourceManager {
   editorSources: EditorSource[] = [];
+  unsubscribe?: UnsubscribeCallback;
 
   /**
    * Note: This will only ever be called once.
    */
   init() {
+  }
+  
+  async beforeStartSync() {
+    // Unsubscribe.
+    this.unsubscribe?.();
+
+    // Reset all caches that we used.
+    // TODO: hook into all caches and evict them automatically,
+    // without having to list them here.
+    sourcesCache.evictAll();
+    sourceHitCountsCache.evictAll();
+
+    // Debug settings.
+    sourceHitCountsCache.enableDebugLogging();
+    
     // Get source data.
     // We can assume that for one recording, this will only ever produce one
     // array of sources.
-    sourcesCache.subscribe((e: any) => {
+    this.unsubscribe = sourcesCache.subscribe((e: any) => {
       try {
         const sources = e.value as Source[] | undefined;
         if (sources) {
@@ -49,17 +66,6 @@ export default class EditorSourceManager {
         logException(err, "sourcesCache.subscribe failed");
       }
     }, replaySessionManager.client!);
-  }
-  
-  async beforeStartSync() {
-    // Reset all caches that we used.
-    // TODO: hook into all caches and evict them automatically,
-    // without having to list them here.
-    sourcesCache.evictAll();
-    sourceHitCountsCache.evictAll();
-
-    // Debug settings.
-    sourceHitCountsCache.enableDebugLogging();
 
     // Show all source lines as pending.
     updateVisibleDecorationsPending();
